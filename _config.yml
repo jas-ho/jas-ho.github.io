@@ -234,3 +234,12 @@ exclude:
 #   permalinks:
 #     tag: /tags/:name/
 #     category: /categories/:name/
+
+plugins:
+  - jekyll-theme-chirpy
+  - jekyll-paginate
+  - jekyll-sitemap
+  - jekyll-gist
+  - jekyll-feed
+  - jemoji
+  - jekyll-include-cache
