@@ -236,7 +236,6 @@ exclude:
 #     category: /categories/:name/
 
 plugins:
-  - jekyll-theme-chirpy
   - jekyll-paginate
   - jekyll-sitemap
   - jekyll-gist
