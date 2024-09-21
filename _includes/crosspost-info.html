@@ -1,0 +1,19 @@
+<div class="crosspost-info">
+  <p><strong>Crossposted to:</strong>
+  {% assign urls = include.urls | split: ',' %}
+  {% for url in urls %}
+    {% assign domain = url | split: '//' | last | split: '/' | first %}
+    {% case domain %}
+      {% when 'www.lesswrong.com' or 'lesswrong.com' %}
+        {% assign abbr = 'LessWrong' %}
+      {% when 'forum.effectivealtruism.org' %}
+        {% assign abbr = 'EA Forum' %}
+      {% when 'www.alignmentforum.org' or 'alignmentforum.org' %}
+        {% assign abbr = 'Alignment Forum' %}
+      {% else %}
+        {% assign abbr = domain %}
+    {% endcase %}
+    <a href="{{ url | strip }}" target="_blank" rel="noopener noreferrer">{{ abbr }}</a>{% unless forloop.last %}, {% endunless %}
+  {% endfor %}
+  </p>
+</div>

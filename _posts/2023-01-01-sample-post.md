@@ -16,3 +16,5 @@ This is a sample post about AI safety research. Here, you can discuss your curre
 3. Collaborative efforts in the AI safety community
 
 (Add more content as needed)
+
+{% include crosspost-info.html urls="https://www.lesswrong.com/posts/your-post-url,https://forum.effectivealtruism.org/posts/your-post-url" %}
