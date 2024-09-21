@@ -1,5 +1,8 @@
 ---
-layout: tags
-icon: fas fa-tags
-order: 2
+# layout: tags
+# title: Tags
+# icon: fas fa-tag
+# order: 2
 ---
+
+<!-- Tags have been disabled -->
