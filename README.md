@@ -1,4 +1,4 @@
-This is the repository for my personal website, built with the Chirpy theme.
+This is the repository for my personal website, built with Jekyll and the Chirpy theme.
 
 ## Usage
 
