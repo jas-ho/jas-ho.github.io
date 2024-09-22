@@ -17,7 +17,7 @@ timezone: Europe/Vienna
 title: Jason Hoelscher-Obermaier
 tagline: AI Safety Researcher and Co-director at Apart Research
 
-description: >- 
+description: >-
   AI Safety Researcher focused on ensuring AI is used for the common good.
   Co-Director & Research Lead at Apart Research.
 
@@ -242,3 +242,6 @@ plugins:
   - jekyll-feed
   - jemoji
   - jekyll-include-cache
+
+include:
+  - webtools
