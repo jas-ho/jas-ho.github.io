@@ -16,14 +16,104 @@ title: FVP Task Manager
   #taskInput { width: 100%; padding: 5px; margin-right: 10px; }
   button { background-color: var(--link-color); color: #fff; border: none; padding: 5px 10px; cursor: pointer; }
   button:hover { background-color: var(--link-hover-color); }
+  .controls button { background: none; border: none; color: #888; font-size: 1.2em; cursor: pointer; padding: 5px; }
+  .controls button:hover { color: var(--link-color); }
+  .marked .controls .mark-btn { color: gold; }
+  .completed .controls .complete-btn { color: green; }
+  #fvp-container {
+    transition: all 0.3s ease;
+  }
+  #fvp-container.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background: var(--main-bg);
+    padding: 20px;
+    overflow-y: auto;
+  }
+  #fullscreen-toggle {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 10000;
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 5px;
+  }
+  #fullscreen-toggle:hover {
+    color: var(--link-color);
+  }
+  #fvp-container h1 {
+    display: none;
+    margin-top: 0;
+  }
+  #fvp-container.fullscreen h1 {
+    display: block;
+  }
+  #fvp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: nowrap;
+  }
+  #fvp-header h1 {
+    margin: 0;
+    font-size: 1.5em;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #keyboard-shortcuts {
+    font-size: 0.9em;
+    color: #888;
+    margin-bottom: 20px;
+  }
+  #keyboard-shortcuts ul {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  #keyboard-shortcuts li {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 5px 10px;
+    border-radius: 4px;
+  }
+  #keyboard-shortcuts .key {
+    font-weight: bold;
+    color: var(--link-color);
+  }
 </style>
 
-<p>Keyboard shortcuts: ↑↓ to navigate, 'm' to mark, 'c' to complete/reopen, 'n' for new task</p>
-<ul id="taskList" tabindex="0"></ul>
-<form id="newTaskForm" onsubmit="addTask(event)">
-  <input type="text" id="taskInput" placeholder="Enter a new task" required>
-  <button type="submit">Add Task</button>
-</form>
+<div id="fvp-container">
+  <button id="fullscreen-toggle" title="Enter Fullscreen">⛶</button>
+  <h1>FVP Task Manager</h1>
+  <div id="keyboard-shortcuts">
+    Keyboard shortcuts:
+    <ul>
+      <li><span class="key">↑↓</span> navigate</li>
+      <li><span class="key">m</span> mark (★)</li>
+      <li><span class="key">c</span> complete/reopen (✓)</li>
+      <li><span class="key">n</span> new task</li>
+      <li><span class="key">d</span> delete (×)</li>
+      <li><span class="key">f</span> toggle fullscreen (⛶)</li>
+    </ul>
+  </div>
+  <ul id="taskList" tabindex="0"></ul>
+  <form id="newTaskForm" onsubmit="addTask(event)">
+    <input type="text" id="taskInput" placeholder="Enter a new task" required>
+    <button type="submit">Add Task</button>
+  </form>
+</div>
 
 <script>
   let tasks = [];
@@ -38,8 +128,9 @@ title: FVP Task Manager
       li.innerHTML = `
         <span class="task-text">${task.text}</span>
         <div class="controls">
-          <button onclick="toggleMark(${index})">Mark</button>
-          <button onclick="toggleComplete(${index})">${task.completed ? 'Reopen' : 'Complete'}</button>
+          <button class="mark-btn" onclick="toggleMark(${index})" title="Mark">★</button>
+          <button class="complete-btn" onclick="toggleComplete(${index})" title="${task.completed ? 'Reopen' : 'Complete'}">✓</button>
+          <button class="delete-btn" onclick="deleteTask(${index})" title="Delete">×</button>
         </div>
       `;
       li.setAttribute('tabindex', '0');
@@ -59,14 +150,16 @@ title: FVP Task Manager
       tasks.push({ text: input.value, marked: false, completed: false });
       input.value = '';
       renderTasks();
-      focusedIndex = tasks.length - 1;
-      updateFocus();
+      // After adding a task, keep focus on the input box
+      input.focus();
     }
   }
 
   function toggleMark(index) {
     tasks[index].marked = !tasks[index].marked;
     renderTasks();
+    // After rendering, we need to restore focus and update the focused item
+    setFocus(index);
   }
 
   function toggleComplete(index) {
@@ -75,6 +168,22 @@ title: FVP Task Manager
       tasks[index].marked = false;
     }
     renderTasks();
+    // After rendering, restore focus to the same item
+    setFocus(index);
+  }
+
+  function deleteTask(index) {
+    tasks.splice(index, 1);
+    renderTasks();
+    // After deletion, set focus to the previous item or the last item if we deleted the last one
+    if (index > 0) {
+      setFocus(index - 1);
+    } else if (tasks.length > 0) {
+      setFocus(0);
+    } else {
+      // If no tasks left, reset focusedIndex
+      focusedIndex = -1;
+    }
   }
 
   function setFocus(index) {
@@ -84,24 +193,97 @@ title: FVP Task Manager
 
   function updateFocus() {
     const taskItems = document.querySelectorAll('#taskList li');
+    const taskInput = document.getElementById('taskInput');
     taskItems.forEach(item => item.classList.remove('focused'));
     if (focusedIndex >= 0 && focusedIndex < taskItems.length) {
+      taskItems[focusedIndex].classList.add('focused');
+      taskItems[focusedIndex].focus();
+    } else if (focusedIndex === -1 || focusedIndex >= taskItems.length) {
+      // If we've gone past the last item or to the input box, focus the input box
+      taskInput.focus();
+      // Ensure no task has the 'focused' class
+      taskItems.forEach(item => item.classList.remove('focused'));
+    } else if (taskItems.length > 0) {
+      // If focusedIndex is out of bounds but there are tasks, focus on the last one
+      focusedIndex = taskItems.length - 1;
       taskItems[focusedIndex].classList.add('focused');
       taskItems[focusedIndex].focus();
     }
   }
 
+  // Ensure the taskList can receive focus
+  document.getElementById('taskList').setAttribute('tabindex', '0');
+
+  function toggleFullscreen() {
+    const container = document.getElementById('fvp-container');
+    const fullscreenToggle = document.getElementById('fullscreen-toggle');
+    container.classList.toggle('fullscreen');
+    fullscreenToggle.textContent = container.classList.contains('fullscreen') ? '⮌' : '⛶';
+    fullscreenToggle.title = container.classList.contains('fullscreen') ? 'Exit Fullscreen' : 'Enter Fullscreen';
+
+    // Hide/show the sidebar and other page elements
+    const sidebar = document.querySelector('.sidebar');
+    const content = document.querySelector('.content');
+    if (sidebar) sidebar.style.display = container.classList.contains('fullscreen') ? 'none' : '';
+    if (content) content.style.width = container.classList.contains('fullscreen') ? '100%' : '';
+
+    // Show/hide the inner title
+    const innerTitle = container.querySelector('h1');
+    if (innerTitle) innerTitle.style.display = container.classList.contains('fullscreen') ? 'block' : 'none';
+  }
+
+  document.getElementById('fullscreen-toggle').addEventListener('click', toggleFullscreen);
+
+  function focusFirstTask() {
+    if (tasks.length > 0) {
+      focusedIndex = 0;
+      updateFocus();
+    }
+  }
+
+  function focusInputBox() {
+    focusedIndex = -1;
+    updateFocus();
+  }
+
   document.addEventListener('keydown', function(e) {
     const taskList = document.getElementById('taskList');
-    if (document.activeElement === taskList || document.activeElement.closest('#taskList')) {
+    const taskInput = document.getElementById('taskInput');
+
+    // Check if the active element is any input field
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+      // Allow normal typing in input fields
+      if (e.key === 'Escape') {
+        focusFirstTask();
+        e.preventDefault();
+      } else if (e.key === 'ArrowUp' && tasks.length > 0) {
+        focusedIndex = tasks.length - 1;
+        updateFocus();
+        e.preventDefault();
+      }
+      return;
+    }
+
+    if (e.key === 'f') {
+      toggleFullscreen();
+      e.preventDefault();
+    } else if (e.key === 'Escape') {
+      focusFirstTask();
+      e.preventDefault();
+    } else if (document.activeElement === taskList || document.activeElement.closest('#taskList')) {
       switch(e.key) {
         case 'ArrowUp':
-          focusedIndex = Math.max(0, focusedIndex - 1);
-          updateFocus();
+          if (focusedIndex > 0) {
+            focusedIndex--;
+            updateFocus();
+          } else if (focusedIndex === 0) {
+            // If at the first item, wrap to the input box
+            focusInputBox();
+          }
           e.preventDefault();
           break;
         case 'ArrowDown':
-          focusedIndex = Math.min(tasks.length - 1, focusedIndex + 1);
+          focusedIndex = Math.min(tasks.length, focusedIndex + 1);
           updateFocus();
           e.preventDefault();
           break;
@@ -112,8 +294,11 @@ title: FVP Task Manager
           if (focusedIndex !== -1) toggleComplete(focusedIndex);
           break;
         case 'n':
-          document.getElementById('taskInput').focus();
+          focusInputBox();
           e.preventDefault();
+          break;
+        case 'd':
+          if (focusedIndex !== -1) deleteTask(focusedIndex);
           break;
       }
     }
