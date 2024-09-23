@@ -155,6 +155,36 @@ title: FVP Task Manager
   let tasks = [];
   let focusedIndex = -1;
 
+  // Function to save tasks to LocalStorage with error handling
+  function saveTasksToLocalStorage(tasks) {
+    try {
+        const serializedTasks = JSON.stringify(tasks);
+        localStorage.setItem('tasks', serializedTasks);
+    } catch (e) {
+        if (e.name === 'QuotaExceededError') {
+            alert('Storage limit exceeded. Please delete some tasks.');
+        } else {
+            console.error('Failed to save tasks:', e);
+        }
+    }
+  }
+
+  // Function to load tasks from LocalStorage with validation
+  function loadTasksFromLocalStorage() {
+    try {
+        const serializedTasks = localStorage.getItem('tasks');
+        if (serializedTasks) {
+            const tasks = JSON.parse(serializedTasks);
+            if (Array.isArray(tasks)) {
+                return tasks;
+            }
+        }
+    } catch (e) {
+        console.error('Failed to load tasks:', e);
+    }
+    return [];
+  }
+
   function renderTasks() {
     const taskList = document.getElementById('taskList');
     taskList.innerHTML = '';
@@ -190,6 +220,7 @@ title: FVP Task Manager
     if (input.value) {
       tasks.push({ text: input.value, marked: false, completed: false });
       input.value = '';
+      saveTasksToLocalStorage(tasks);
       renderTasks();
       // After adding a task, keep focus on the input box
       input.focus();
@@ -198,6 +229,7 @@ title: FVP Task Manager
 
   function toggleMark(index) {
     tasks[index].marked = !tasks[index].marked;
+    saveTasksToLocalStorage(tasks);
     renderTasks();
     // After rendering, we need to restore focus and update the focused item
     setFocus(index);
@@ -208,6 +240,7 @@ title: FVP Task Manager
     if (tasks[index].completed) {
       tasks[index].marked = false;
     }
+    saveTasksToLocalStorage(tasks);
     renderTasks();
     // After rendering, restore focus to the same item
     setFocus(index);
@@ -215,6 +248,7 @@ title: FVP Task Manager
 
   function deleteTask(index) {
     tasks.splice(index, 1);
+    saveTasksToLocalStorage(tasks);
     renderTasks();
     // After deletion, set focus to the previous item or the last item if we deleted the last one
     if (index > 0) {
@@ -352,18 +386,25 @@ title: FVP Task Manager
   document.getElementById('delete-all').addEventListener('click', function() {
     if (confirm('Are you sure you want to delete all tasks?')) {
       tasks = [];
+      saveTasksToLocalStorage(tasks);
       renderTasks();
       focusInputBox();
     }
   });
 
-  // Initialize with some example tasks
-  tasks = [
-    { text: "Create FVP MVP", marked: false, completed: false },
-    { text: "Test FVP functionality", marked: false, completed: false },
-    { text: "Gather user feedback", marked: false, completed: false }
-  ];
-  renderTasks();
-  document.getElementById('taskList').focus();
+  // Load tasks when the page loads
+  document.addEventListener('DOMContentLoaded', () => {
+    tasks = loadTasksFromLocalStorage();
+    renderTasks();
+    document.getElementById('taskList').focus();
+  });
+
+  // Listen for changes to LocalStorage
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'tasks') {
+      tasks = loadTasksFromLocalStorage();
+      renderTasks();
+    }
+  });
 </script>
 {% endraw %}
