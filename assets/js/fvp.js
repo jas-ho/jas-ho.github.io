@@ -39,7 +39,9 @@ function renderTasks() {
     const li = document.createElement('li');
     li.innerHTML = `
       <span class="task-text">${task.text}</span>
+      <span class="stopwatch">${formatTime(getDisplayedTime(task))}</span>
       <div class="controls">
+        <button class="start-btn" onclick="handleStartButtonClick(event, ${index})" title="Start">${task.lastStartedTime !== null ? '⏸' : '▶'}</button>
         <button class="mark-btn" onclick="toggleMark(${index})" title="Mark">★</button>
         <button class="complete-btn" onclick="toggleComplete(${index})" title="${task.completed ? 'Reopen' : 'Complete'}">✓</button>
         <button class="delete-btn" onclick="deleteTask(${index})" title="Delete">×</button>
@@ -49,6 +51,7 @@ function renderTasks() {
     li.onclick = () => setFocus(index);
     if (task.marked) li.classList.add('marked');
     if (task.completed) li.classList.add('completed');
+    if (task.lastStartedTime !== null) li.classList.add('running');
     if (index === lastMarkedIndex) li.classList.add('last-marked');
     if (index === focusedIndex) li.classList.add('focused');
     taskList.appendChild(li);
@@ -64,12 +67,13 @@ function addTask(event) {
   event.preventDefault();
   const input = document.getElementById('taskInput');
   if (input.value) {
-    tasks.push({ text: input.value, marked: false, completed: false });
+    const newTask = { text: input.value, marked: false, completed: false, cumulativeTime: 0, lastStartedTime: null };
+    tasks.push(newTask);
     input.value = '';
     saveTasksToLocalStorage(tasks);
     renderTasks();
-    // After adding a task, keep focus on the input box
     input.focus();
+    logInteraction('addTask', tasks.length - 1); // Log the action
   }
 }
 
@@ -77,34 +81,74 @@ function toggleMark(index) {
   tasks[index].marked = !tasks[index].marked;
   saveTasksToLocalStorage(tasks);
   renderTasks();
-  // After rendering, we need to restore focus and update the focused item
   setFocus(index);
+  logInteraction('toggleMark', index); // Log the action
 }
 
 function toggleComplete(index) {
   tasks[index].completed = !tasks[index].completed;
   if (tasks[index].completed) {
     tasks[index].marked = false;
+    if (tasks[index].lastStartedTime !== null) {
+      toggleStart(index); // Pause the timer when completing a task
+    }
   }
   saveTasksToLocalStorage(tasks);
   renderTasks();
-  // After rendering, restore focus to the same item
   setFocus(index);
+  logInteraction('toggleComplete', index); // Log the action
 }
 
 function deleteTask(index) {
   tasks.splice(index, 1);
   saveTasksToLocalStorage(tasks);
   renderTasks();
-  // After deletion, set focus to the previous item or the last item if we deleted the last one
   if (index > 0) {
     setFocus(index - 1);
   } else if (tasks.length > 0) {
     setFocus(0);
   } else {
-    // If no tasks left, reset focusedIndex
     focusedIndex = -1;
   }
+  logInteraction('deleteTask', index); // Log the action
+}
+
+let isToggling = false;
+
+function toggleStart(index) {
+  if (isToggling) return; // Prevent multiple triggers
+  isToggling = true;
+
+  const task = tasks[index];
+  if (task.lastStartedTime === null) {
+    task.lastStartedTime = Date.now();
+  } else {
+    task.cumulativeTime += (Date.now() - task.lastStartedTime) / 1000;
+    task.lastStartedTime = null;
+  }
+  saveTasksToLocalStorage(tasks);
+  renderTasks();
+  setFocus(index);
+  logInteraction('toggleStart', index); // Log the action
+
+  // Reset the flag after a short delay
+  setTimeout(() => {
+    isToggling = false;
+  }, 100); // Adjust the delay as needed
+}
+
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+function getDisplayedTime(task) {
+  if (task.lastStartedTime !== null) {
+    const elapsedTime = (Date.now() - task.lastStartedTime) / 1000;
+    return task.cumulativeTime + elapsedTime;
+  }
+  return task.cumulativeTime;
 }
 
 function setFocus(index) {
@@ -117,6 +161,9 @@ function updateFocus() {
   const taskInput = document.getElementById('taskInput');
   taskItems.forEach(item => item.classList.remove('focused'));
   if (focusedIndex >= 0 && focusedIndex < taskItems.length) {
+    if (tasks[focusedIndex].lastStartedTime !== null) {
+      toggleStart(focusedIndex); // Pause the timer when moving away
+    }
     taskItems[focusedIndex].classList.add('focused');
     taskItems[focusedIndex].focus();
   } else if (focusedIndex === -1 || focusedIndex >= taskItems.length) {
@@ -167,6 +214,12 @@ function focusInputBox() {
   updateFocus();
 }
 
+// Function to log interactions
+function logInteraction(action, index) {
+  const task = tasks[index] || null; // Get the task or null if index is invalid
+  console.log(`Action: ${action}`, { index, task });
+}
+
 document.addEventListener('keydown', function(e) {
   const taskList = document.getElementById('taskList');
   const taskInput = document.getElementById('taskInput');
@@ -180,6 +233,7 @@ document.addEventListener('keydown', function(e) {
     } else if (e.key === 'ArrowUp' && tasks.length > 0) {
       focusedIndex = tasks.length - 1;
       updateFocus();
+      logInteraction('navigate', focusedIndex); // Log the action
       e.preventDefault();
     }
     return;
@@ -197,6 +251,7 @@ document.addEventListener('keydown', function(e) {
         if (focusedIndex > 0) {
           focusedIndex--;
           updateFocus();
+          logInteraction('navigate', focusedIndex); // Log the action
         } else if (focusedIndex === 0) {
           // If at the first item, wrap to the input box
           focusInputBox();
@@ -206,23 +261,38 @@ document.addEventListener('keydown', function(e) {
       case 'ArrowDown':
         focusedIndex = Math.min(tasks.length, focusedIndex + 1);
         updateFocus();
+        logInteraction('navigate', focusedIndex); // Log the action
         e.preventDefault();
         break;
       case 'm':
-        if (focusedIndex !== -1) toggleMark(focusedIndex);
+        if (focusedIndex !== -1) {
+          toggleMark(focusedIndex);
+          logInteraction('mark', focusedIndex); // Log the action
+        }
         break;
       case 'c':
-        if (focusedIndex !== -1) toggleComplete(focusedIndex);
+        if (focusedIndex !== -1) {
+          toggleComplete(focusedIndex);
+          logInteraction('complete', focusedIndex); // Log the action
+        }
         break;
       case 'n':
         focusInputBox();
+        logInteraction('focusInput', focusedIndex); // Log the action
         e.preventDefault();
         break;
       case 'd':
         if (focusedIndex !== -1) {
           deleteTask(focusedIndex);
+          logInteraction('delete', focusedIndex); // Log the action
           e.stopPropagation();
           e.preventDefault();
+        }
+        break;
+      case 's':
+        if (focusedIndex !== -1) {
+          toggleStart(focusedIndex);
+          logInteraction('start', focusedIndex); // Log the action
         }
         break;
     }
@@ -278,6 +348,7 @@ document.getElementById('import-file').addEventListener('change', function(event
 document.addEventListener('DOMContentLoaded', () => {
   tasks = loadTasksFromLocalStorage();
   renderTasks();
+  startUpdatingTime(); // Start updating the time display
   document.getElementById('taskList').focus();
 });
 
@@ -288,3 +359,29 @@ window.addEventListener('storage', (event) => {
     renderTasks();
   }
 });
+
+// New function to handle the start button click
+function handleStartButtonClick(event, index) {
+  event.stopPropagation(); // Prevent event bubbling
+  event.preventDefault(); // Prevent default button behavior
+  toggleStart(index); // Call the toggleStart function
+}
+
+// Function to update the displayed time for each task
+function updateDisplayedTimes() {
+  const taskList = document.getElementById('taskList');
+  const taskItems = taskList.querySelectorAll('li');
+
+  taskItems.forEach((item, index) => {
+    const task = tasks[index];
+    const stopwatch = item.querySelector('.stopwatch');
+    if (stopwatch) {
+      stopwatch.innerHTML = formatTime(getDisplayedTime(task));
+    }
+  });
+}
+
+// Call this function to start updating the time every second
+function startUpdatingTime() {
+  setInterval(updateDisplayedTimes, 1000); // Update every second
+}

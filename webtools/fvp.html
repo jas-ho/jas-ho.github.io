@@ -43,6 +43,9 @@ title: FVP Task Manager
   .controls button:hover { color: var(--link-color); }
   .marked .controls .mark-btn { color: gold; }
   .completed .controls .complete-btn { color: green; }
+  .controls .start-btn { color: #888; } /* Gray color for play icon */
+  .running .controls .start-btn { color: red; }
+  .stopwatch { margin-left: 10px; font-size: 0.9em; color: #888; }
   #fvp-container {
     transition: all 0.3s ease;
   }
@@ -160,6 +163,7 @@ title: FVP Task Manager
       <li><span class="key">n</span> new task</li>
       <li><span class="key">d</span> delete (×)</li>
       <li><span class="key">f</span> toggle fullscreen (⛶)</li>
+      <li><span class="key">s</span> start/stop (▶/⏸)</li> <!-- Added start/stop shortcut -->
     </ul>
   </div>
   <ul id="taskList" tabindex="0"></ul>
