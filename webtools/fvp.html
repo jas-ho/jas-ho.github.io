@@ -17,6 +17,7 @@ title: FVP Task Manager
     align-items: center;
     gap: 10px;
     margin-top: 20px;
+    flex-wrap: wrap;
   }
   #newTaskForm {
     display: flex;
@@ -102,7 +103,7 @@ title: FVP Task Manager
     font-weight: bold;
     color: var(--link-color);
   }
-  #add-task-btn, #delete-all {
+  #add-task-btn, #export-btn, #import-btn, #delete-all {
     background-color: var(--link-color);
     color: #fff;
     border: none;
@@ -116,10 +117,16 @@ title: FVP Task Manager
   #add-task-btn {
     background-color: #4CAF50; /* Green */
   }
+  #export-btn {
+    background-color: #2196F3; /* Blue */
+  }
+  #import-btn {
+    background-color: #FF9800; /* Orange */
+  }
   #delete-all {
     background-color: #f44336; /* Red */
   }
-  #add-task-btn:hover, #delete-all:hover {
+  #add-task-btn:hover, #delete-all:hover, #export-btn:hover, #import-btn:hover {
     background-color: var(--link-hover-color);
   }
 </style>
@@ -146,7 +153,12 @@ title: FVP Task Manager
       <input type="text" id="taskInput" placeholder="Enter a new task" required>
       <button type="submit" id="add-task-btn">Add Task</button>
     </form>
-    <button id="delete-all" title="Delete All Tasks">Delete All</button>
+  </div>
+  <div id="task-actions" style="display: flex; justify-content: space-between;">
+    <button id="export-btn" title="Export Tasks" style="width: 33%;">Export</button>
+    <button id="import-btn" title="Import Tasks" style="width: 33%;">Import</button>
+    <button id="delete-all" title="Delete All Tasks" style="width: 33%;">Delete All</button>
+    <input type="file" id="import-file" style="display: none;" accept=".json">
   </div>
 </div>
 
@@ -389,6 +401,42 @@ title: FVP Task Manager
       saveTasksToLocalStorage(tasks);
       renderTasks();
       focusInputBox();
+    }
+  });
+
+  document.getElementById('export-btn').addEventListener('click', function() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasks));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "tasks.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  });
+
+  document.getElementById('import-btn').addEventListener('click', function() {
+    document.getElementById('import-file').click();
+  });
+
+  document.getElementById('import-file').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedTasks = JSON.parse(e.target.result);
+          if (Array.isArray(importedTasks)) {
+            tasks = importedTasks;
+            saveTasksToLocalStorage(tasks);
+            renderTasks();
+          } else {
+            alert('Invalid file format.');
+          }
+        } catch (error) {
+          alert('Error reading file.');
+        }
+      };
+      reader.readAsText(file);
     }
   });
 
