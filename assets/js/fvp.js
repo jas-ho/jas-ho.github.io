@@ -392,7 +392,33 @@ function updateDisplayedTimes() {
   });
 }
 
+function formatCumulativeTime(seconds) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return `${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
+}
+
+// New function to update the progress bar and cumulative work time
+function updateProgressBar() {
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(task => task.completed).length;
+  const progressBar = document.getElementById('progress-bar');
+  const cumulativeTimeInSeconds = tasks.reduce((total, task) => total + getDisplayedTime(task), 0); // Total time in seconds
+
+  // Update progress bar width
+  progressBar.style.width = totalTasks > 0 ? `${(completedTasks / totalTasks) * 100}%` : '0%';
+
+  // Update cumulative work time display in hh:mm format
+  document.getElementById('cumulative-time').textContent = `Cumulative Work Time: ${formatCumulativeTime(cumulativeTimeInSeconds)}`;
+
+  // Set hover text for progress bar
+  progressBar.setAttribute('data-hover', `${completedTasks} out of ${totalTasks} tasks completed`);
+}
+
 // Call this function to start updating the time every second
 function startUpdatingTime() {
-  setInterval(updateDisplayedTimes, 1000); // Update every second
+  setInterval(() => {
+    updateDisplayedTimes();
+    updateProgressBar(); // Update progress bar and cumulative work time every second
+  }, 1000); // Update every second
 }
