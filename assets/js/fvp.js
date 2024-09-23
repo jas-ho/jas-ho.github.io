@@ -67,7 +67,7 @@ function addTask(event) {
   event.preventDefault();
   const input = document.getElementById('taskInput');
   if (input.value) {
-    const newTask = { text: input.value, marked: false, completed: false, cumulativeTime: 0, lastStartedTime: null };
+    const newTask = { text: input.value, marked: false, completed: false, cumulativeTimeInSeconds: 0, lastStartedTime: null };
     tasks.push(newTask);
     input.value = '';
     saveTasksToLocalStorage(tasks);
@@ -90,13 +90,23 @@ function toggleComplete(index) {
   if (tasks[index].completed) {
     tasks[index].marked = false;
     if (tasks[index].lastStartedTime !== null) {
-      toggleStart(index); // Pause the timer when completing a task
+      toggleStart(index); // Stop the timer when completing a task
+      promptForReflection(index); // Prompt for reflection after completing
     }
   }
   saveTasksToLocalStorage(tasks);
   renderTasks();
   setFocus(index);
   logInteraction('toggleComplete', index); // Log the action
+}
+
+function promptForReflection(index) {
+  const task = tasks[index];
+  const elapsedTime = Math.ceil(task.cumulativeTimeInSeconds / 60); // Convert to minutes and round up
+  const reflection = prompt(`You completed "${task.text}" in ${elapsedTime} minutes. How did it go? Are you happy with the speed of execution?`);
+  if (reflection) {
+    tasks[index].comments = reflection; // Store the reflection in the task
+  }
 }
 
 function deleteTask(index) {
@@ -123,7 +133,7 @@ function toggleStart(index) {
   if (task.lastStartedTime === null) {
     task.lastStartedTime = Date.now();
   } else {
-    task.cumulativeTime += (Date.now() - task.lastStartedTime) / 1000;
+    task.cumulativeTimeInSeconds += (Date.now() - task.lastStartedTime) / 1000;
     task.lastStartedTime = null;
   }
   saveTasksToLocalStorage(tasks);
@@ -146,9 +156,9 @@ function formatTime(seconds) {
 function getDisplayedTime(task) {
   if (task.lastStartedTime !== null) {
     const elapsedTime = (Date.now() - task.lastStartedTime) / 1000;
-    return task.cumulativeTime + elapsedTime;
+    return task.cumulativeTimeInSeconds + elapsedTime;
   }
-  return task.cumulativeTime;
+  return task.cumulativeTimeInSeconds;
 }
 
 function setFocus(index) {
