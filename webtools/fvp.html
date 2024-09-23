@@ -142,6 +142,11 @@ title: FVP Task Manager
       if (index === focusedIndex) li.classList.add('focused');
       taskList.appendChild(li);
     });
+
+    // If the task list is empty, focus on the input box
+    if (tasks.length === 0) {
+      focusInputBox();
+    }
   }
 
   function addTask(event) {
@@ -299,7 +304,11 @@ title: FVP Task Manager
           e.preventDefault();
           break;
         case 'd':
-          if (focusedIndex !== -1) deleteTask(focusedIndex);
+          if (focusedIndex !== -1) {
+            deleteTask(focusedIndex);
+            e.stopPropagation();
+            e.preventDefault();
+          }
           break;
       }
     }
