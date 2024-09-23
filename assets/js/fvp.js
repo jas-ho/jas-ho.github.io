@@ -91,8 +91,8 @@ function toggleComplete(index) {
     tasks[index].marked = false;
     if (tasks[index].lastStartedTime !== null) {
       toggleStart(index); // Stop the timer when completing a task
-      promptForReflection(index); // Prompt for reflection after completing
     }
+    promptForReflection(index); // Prompt for reflection after completing
   }
   saveTasksToLocalStorage(tasks);
   renderTasks();
@@ -105,7 +105,8 @@ function promptForReflection(index) {
   const elapsedTime = Math.ceil(task.cumulativeTimeInSeconds / 60); // Convert to minutes and round up
   const reflection = prompt(`You completed "${task.text}" in ${elapsedTime} minutes. How did it go? Are you happy with the speed of execution?`);
   if (reflection) {
-    tasks[index].comments = reflection; // Store the reflection in the task
+    const timestamp = new Date().toLocaleString(); // Get current timestamp
+    tasks[index].comments = (tasks[index].comments || '') + (tasks[index].comments ? `\n` : '') + `[${timestamp}] ${reflection}`; // Concatenate reflection with timestamp
   }
 }
 
