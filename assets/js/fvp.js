@@ -61,6 +61,9 @@ function renderTasks() {
   if (tasks.length === 0) {
     focusInputBox();
   }
+
+  // Update the progress bar after rendering tasks
+  updateProgressBar();
 }
 
 function addTask(event) {
