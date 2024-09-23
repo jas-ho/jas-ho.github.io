@@ -12,8 +12,18 @@ title: FVP Task Manager
   .focused { background-color: var(--sidebar-bg); outline: 2px solid var(--link-color); }
   .task-text { flex-grow: 1; }
   .controls { display: flex; gap: 10px; }
-  #newTaskForm { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--main-bg); padding: 10px; width: 100%; max-width: 650px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
-  #taskInput { width: 100%; padding: 5px; margin-right: 10px; }
+  #task-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  #newTaskForm {
+    display: flex;
+    flex-grow: 1;
+  }
+  #taskInput { width: 100%; padding: 10px; border: 2px solid var(--link-color); border-radius: 5px; font-size: 1em; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
+  #taskInput:focus { outline: none; border-color: var(--link-hover-color); box-shadow: 0 0 5px var(--link-hover-color); }
   button { background-color: var(--link-color); color: #fff; border: none; padding: 5px 10px; cursor: pointer; }
   button:hover { background-color: var(--link-hover-color); }
   .controls button { background: none; border: none; color: #888; font-size: 1.2em; cursor: pointer; padding: 5px; }
@@ -92,11 +102,33 @@ title: FVP Task Manager
     font-weight: bold;
     color: var(--link-color);
   }
+  #add-task-btn, #delete-all {
+    background-color: var(--link-color);
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 1em;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    white-space: nowrap; /* Ensure no line breaks */
+  }
+  #add-task-btn {
+    background-color: #4CAF50; /* Green */
+  }
+  #delete-all {
+    background-color: #f44336; /* Red */
+  }
+  #add-task-btn:hover, #delete-all:hover {
+    background-color: var(--link-hover-color);
+  }
 </style>
 
 <div id="fvp-container">
   <button id="fullscreen-toggle" title="Enter Fullscreen">⛶</button>
-  <h1>FVP Task Manager</h1>
+  <div id="fvp-header">
+    <h1>FVP Task Manager</h1>
+  </div>
   <div id="keyboard-shortcuts">
     Keyboard shortcuts:
     <ul>
@@ -109,10 +141,13 @@ title: FVP Task Manager
     </ul>
   </div>
   <ul id="taskList" tabindex="0"></ul>
-  <form id="newTaskForm" onsubmit="addTask(event)">
-    <input type="text" id="taskInput" placeholder="Enter a new task" required>
-    <button type="submit">Add Task</button>
-  </form>
+  <div id="task-controls">
+    <form id="newTaskForm" onsubmit="addTask(event)">
+      <input type="text" id="taskInput" placeholder="Enter a new task" required>
+      <button type="submit" id="add-task-btn">Add Task</button>
+    </form>
+    <button id="delete-all" title="Delete All Tasks">Delete All</button>
+  </div>
 </div>
 
 {% raw %}
@@ -311,6 +346,14 @@ title: FVP Task Manager
           }
           break;
       }
+    }
+  });
+
+  document.getElementById('delete-all').addEventListener('click', function() {
+    if (confirm('Are you sure you want to delete all tasks?')) {
+      tasks = [];
+      renderTasks();
+      focusInputBox();
     }
   });
 
