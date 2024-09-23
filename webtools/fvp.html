@@ -23,8 +23,20 @@ title: FVP Task Manager
     display: flex;
     flex-grow: 1;
   }
-  #taskInput { width: 100%; padding: 10px; border: 2px solid var(--link-color); border-radius: 5px; font-size: 1em; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
-  #taskInput:focus { outline: none; border-color: var(--link-hover-color); box-shadow: 0 0 5px var(--link-hover-color); }
+  #taskInput {
+    width: 100%;
+    padding: 5px; /* Decreased padding for a sensible height */
+    border: 2px solid var(--link-color);
+    border-radius: 5px;
+    font-size: 1em; /* Adjusted font size */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    height: 2.5em; /* Match the height of the focus box */
+  }
+  #taskInput:focus {
+    outline: none;
+    border-color: var(--link-hover-color);
+    box-shadow: 0 0 5px var(--link-hover-color);
+  }
   button { background-color: var(--link-color); color: #fff; border: none; padding: 5px 10px; cursor: pointer; }
   button:hover { background-color: var(--link-hover-color); }
   .controls button { background: none; border: none; color: #888; font-size: 1.2em; cursor: pointer; padding: 5px; }
@@ -104,30 +116,33 @@ title: FVP Task Manager
     color: var(--link-color);
   }
   #add-task-btn, #export-btn, #import-btn, #delete-all {
-    background-color: var(--link-color);
-    color: #fff;
+    background-color: transparent;
+    color: #888; /* Grey icon color */
     border: none;
     padding: 5px 10px;
     cursor: pointer;
-    border-radius: 5px;
-    font-size: 1em;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-size: 1.5em; /* Increase font size for icons */
     white-space: nowrap; /* Ensure no line breaks */
-  }
-  #add-task-btn {
-    background-color: #4CAF50; /* Green */
-  }
-  #export-btn {
-    background-color: #2196F3; /* Blue */
-  }
-  #import-btn {
-    background-color: #FF9800; /* Orange */
-  }
-  #delete-all {
-    background-color: #f44336; /* Red */
+    transition: color 0.3s, background-color 0.3s;
   }
   #add-task-btn:hover, #delete-all:hover, #export-btn:hover, #import-btn:hover {
-    background-color: var(--link-hover-color);
+    color: var(--link-hover-color);
+    background-color: rgba(255, 255, 255, 0.05); /* Slightly muted background on hover */
+  }
+  #add-task-btn::after, #delete-all::after, #export-btn::after, #import-btn::after {
+    content: attr(title);
+    display: block;
+    font-size: 0.8em;
+    color: #888;
+    margin-top: 5px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  #add-task-btn:hover::after, #delete-all:hover::after, #export-btn:hover::after, #import-btn:hover::after {
+    opacity: 1;
+  }
+  #task-actions {
+    margin-top: 20px; /* Add space between the new tasks input line and the task actions line */
   }
 </style>
 
@@ -151,13 +166,13 @@ title: FVP Task Manager
   <div id="task-controls">
     <form id="newTaskForm" onsubmit="addTask(event)">
       <input type="text" id="taskInput" placeholder="Enter a new task" required>
-      <button type="submit" id="add-task-btn">Add Task</button>
+      <button type="submit" id="add-task-btn" title="Add Task"><i class="fas fa-plus"></i></button>
     </form>
   </div>
-  <div id="task-actions" style="display: flex; justify-content: space-between;">
-    <button id="export-btn" title="Export Tasks" style="width: 33%;">Export</button>
-    <button id="import-btn" title="Import Tasks" style="width: 33%;">Import</button>
-    <button id="delete-all" title="Delete All Tasks" style="width: 33%;">Delete All</button>
+  <div id="task-actions" style="display: flex; justify-content: space-between; margin-top: 20px;">
+    <button id="export-btn" title="Export Tasks"><i class="fas fa-download"></i></button>
+    <button id="import-btn" title="Import Tasks"><i class="fas fa-upload"></i></button>
+    <button id="delete-all" title="Delete All Tasks"><i class="fas fa-trash"></i></button>
     <input type="file" id="import-file" style="display: none;" accept=".json">
   </div>
 </div>
