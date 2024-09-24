@@ -63,8 +63,8 @@ function renderTasks() {
     if (task.completed && !showCompletedTasks) return; // Skip completed tasks if hidden
     const li = document.createElement('li');
     li.innerHTML = `
-      <span class="task-text">${task.text}</span>
-      <span class="stopwatch">${formatTime(getDisplayedTime(task))}</span>
+      <span class="task-text" ondblclick="editTaskTitle(${index})">${task.text}</span>
+      <span class="stopwatch" ondblclick="editTaskTime(${index})">${formatTime(getDisplayedTime(task))}</span>
       <div class="controls">
         <button class="start-btn" onclick="handleStartButtonClick(event, ${index})" title="Start">${task.lastStartedTime !== null ? '⏸' : '▶'}</button>
         <button class="mark-btn" onclick="toggleMark(${index})" title="Mark">★</button>
@@ -189,9 +189,10 @@ function toggleStart(index) {
 }
 
 function formatTime(seconds) {
-  const mins = Math.floor(seconds / 60);
+  const hours = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  return `${hours > 0 ? hours + ':' : ''}${hours > 0 && mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
 
 function getDisplayedTime(task) {
@@ -495,4 +496,81 @@ function formatDateTime(timestamp) {
   const minutes = String(date.getMinutes()).padStart(2, '0');
   const seconds = String(date.getSeconds()).padStart(2, '0');
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+// Function to edit task title
+function editTaskTitle(index) {
+  const task = tasks[index];
+  const taskList = document.getElementById('taskList');
+  const taskItem = taskList.children[index];
+  const taskText = taskItem.querySelector('.task-text');
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = task.text;
+  input.onblur = () => {
+    task.text = input.value;
+    saveTasksToLocalStorage(tasks);
+    renderTasks();
+  };
+  input.onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      input.blur();
+    }
+  };
+
+  taskText.replaceWith(input);
+  input.focus();
+}
+
+// Function to edit task cumulative time
+function editTaskTime(index) {
+  const task = tasks[index];
+  const taskList = document.getElementById('taskList');
+  const taskItem = taskList.children[index];
+  const stopwatch = taskItem.querySelector('.stopwatch');
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = formatTime(getDisplayedTime(task));
+  input.onblur = () => {
+    const timeParts = input.value.split(':').map(Number);
+    let newCumulativeTimeInSeconds = 0;
+
+    if (timeParts.length === 3) {
+      // Format: hh:mm:ss
+      const [hours, mins, secs] = timeParts;
+      if (!isNaN(hours) && !isNaN(mins) && !isNaN(secs)) {
+        newCumulativeTimeInSeconds = hours * 3600 + mins * 60 + secs;
+      }
+    } else if (timeParts.length === 2) {
+      // Format: mm:ss
+      const [mins, secs] = timeParts;
+      if (!isNaN(mins) && !isNaN(secs)) {
+        newCumulativeTimeInSeconds = mins * 60 + secs;
+      }
+    }
+
+    if (newCumulativeTimeInSeconds > 0) {
+      if (task.lastStartedTime !== null) {
+        // If the task is running, adjust the lastStartedTime to keep the timer accurate
+        const elapsedTime = (Date.now() - task.lastStartedTime) / 1000;
+        task.lastStartedTime = Date.now() - (newCumulativeTimeInSeconds - task.cumulativeTimeInSeconds - elapsedTime) * 1000;
+      }
+      task.cumulativeTimeInSeconds = newCumulativeTimeInSeconds;
+      saveTasksToLocalStorage(tasks);
+      renderTasks();
+    } else {
+      // If the input is invalid, revert to the original time
+      renderTasks();
+    }
+  };
+  input.onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      input.blur();
+    }
+  };
+
+  stopwatch.replaceWith(input);
+  input.focus();
 }
