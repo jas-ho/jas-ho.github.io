@@ -31,11 +31,31 @@ function loadTasksFromLocalStorage() {
   return [];
 }
 
+// New variable to track visibility of completed tasks
+let showCompletedTasks = true;
+
+// Function to toggle visibility of completed tasks
+function toggleCompletedTasks() {
+  showCompletedTasks = !showCompletedTasks;
+  renderTasks();
+}
+
+// Function to clear completed tasks
+function clearCompletedTasks() {
+  if (confirm('Are you sure you want to delete all completed tasks?')) {
+    tasks = tasks.filter(task => !task.completed);
+    saveTasksToLocalStorage(tasks);
+    renderTasks();
+  }
+}
+
+// Update renderTasks to respect the visibility of completed tasks
 function renderTasks() {
   const taskList = document.getElementById('taskList');
   taskList.innerHTML = '';
   let lastMarkedIndex = tasks.findLastIndex(task => task.marked && !task.completed);
   tasks.forEach((task, index) => {
+    if (task.completed && !showCompletedTasks) return; // Skip completed tasks if hidden
     const li = document.createElement('li');
     li.innerHTML = `
       <span class="task-text">${task.text}</span>
@@ -309,6 +329,10 @@ document.addEventListener('keydown', function(e) {
           logInteraction('start', focusedIndex); // Log the action
         }
         break;
+      case 'h':
+        toggleCompletedTasks();
+        logInteraction('toggleCompletedTasks', focusedIndex); // Log the action
+        break;
     }
   }
 });
@@ -365,6 +389,10 @@ document.getElementById('import-file').addEventListener('change', function(event
     reader.readAsText(file);
   }
 });
+
+// Event listeners for the new buttons
+document.getElementById('toggle-completed-btn').addEventListener('click', toggleCompletedTasks);
+document.getElementById('clear-completed-btn').addEventListener('click', clearCompletedTasks);
 
 // Load tasks when the page loads
 document.addEventListener('DOMContentLoaded', () => {
