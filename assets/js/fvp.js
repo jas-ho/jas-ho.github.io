@@ -22,6 +22,11 @@ function loadTasksFromLocalStorage() {
     if (serializedTasks) {
       const tasks = JSON.parse(serializedTasks);
       if (Array.isArray(tasks)) {
+        // Ensure each task has startTime and endTime properties
+        tasks.forEach(task => {
+          if (task.startTime === undefined) task.startTime = null;
+          if (task.endTime === undefined) task.endTime = null;
+        });
         return tasks;
       }
     }
@@ -90,7 +95,15 @@ function addTask(event) {
   event.preventDefault();
   const input = document.getElementById('taskInput');
   if (input.value) {
-    const newTask = { text: input.value, marked: false, completed: false, cumulativeTimeInSeconds: 0, lastStartedTime: null };
+    const newTask = {
+      text: input.value,
+      marked: false,
+      completed: false,
+      cumulativeTimeInSeconds: 0,
+      lastStartedTime: null,
+      startTime: null, // Add startTime property
+      endTime: null // Add endTime property
+    };
     tasks.push(newTask);
     input.value = '';
     saveTasksToLocalStorage(tasks);
@@ -115,6 +128,7 @@ function toggleComplete(index) {
     if (tasks[index].lastStartedTime !== null) {
       toggleStart(index); // Stop the timer when completing a task
     }
+    tasks[index].endTime = Date.now(); // Set endTime when task is completed
     promptForReflection(index); // Prompt for reflection after completing
   }
   saveTasksToLocalStorage(tasks);
@@ -128,7 +142,7 @@ function promptForReflection(index) {
   const elapsedTime = Math.ceil(task.cumulativeTimeInSeconds / 60); // Convert to minutes and round up
   const reflection = prompt(`You completed "${task.text}" in ${elapsedTime} minutes. How did it go? Are you happy with the speed of execution?`);
   if (reflection) {
-    const timestamp = new Date().toLocaleString(); // Get current timestamp
+    const timestamp = formatDateTime(Date.now()); // Get current timestamp in the new format
     tasks[index].comments = (tasks[index].comments || '') + (tasks[index].comments ? `\n` : '') + `[${timestamp}] ${reflection}`; // Concatenate reflection with timestamp
   }
 }
@@ -156,6 +170,9 @@ function toggleStart(index) {
   const task = tasks[index];
   if (task.lastStartedTime === null) {
     task.lastStartedTime = Date.now();
+    if (task.startTime === null) {
+      task.startTime = task.lastStartedTime; // Set startTime if not already set
+    }
   } else {
     task.cumulativeTimeInSeconds += (Date.now() - task.lastStartedTime) / 1000;
     task.lastStartedTime = null;
@@ -350,7 +367,7 @@ document.getElementById('export-btn').addEventListener('click', function() {
   const timestamp = new Date().toISOString().split('T')[0]; // Get YYYY-MM-DD format
   console.log('Timestamp:', timestamp); // Debug log
 
-  const filename = `${timestamp}_FVP_tasks.md`;
+  const filename = `${timestamp}_FVP_tasks.json`;
   console.log('Filename:', filename); // Debug log
 
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasks));
@@ -376,6 +393,11 @@ document.getElementById('import-file').addEventListener('change', function(event
       try {
         const importedTasks = JSON.parse(e.target.result);
         if (Array.isArray(importedTasks)) {
+          // Ensure each imported task has startTime and endTime properties
+          importedTasks.forEach(task => {
+            if (task.startTime === undefined) task.startTime = null;
+            if (task.endTime === undefined) task.endTime = null;
+          });
           tasks = importedTasks;
           saveTasksToLocalStorage(tasks);
           renderTasks();
@@ -460,4 +482,17 @@ function startUpdatingTime() {
     updateDisplayedTimes();
     updateProgressBar(); // Update progress bar and cumulative work time every second
   }, 1000); // Update every second
+}
+
+// Function to format date and time as YYYY-MM-DD HH:mm:ss
+function formatDateTime(timestamp) {
+  if (!timestamp) return null;
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
