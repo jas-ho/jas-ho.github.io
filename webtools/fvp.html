@@ -215,6 +215,33 @@ title: FVP Task Manager
     font-size: 1em;
     margin: 5px 0;
   }
+  .reflection-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    z-index: 10000;
+  }
+  .reflection-dialog p {
+    margin: 0 0 10px;
+  }
+  .reflection-dialog textarea {
+    width: 100%;
+    height: 100px;
+    margin-bottom: 10px;
+  }
+  .dialog-actions {
+    display: flex;
+    justify-content: space-between;
+  }
+  .dialog-actions button {
+    padding: 5px 10px;
+    cursor: pointer;
+  }
 </style>
 
 <div id="fvp-container">

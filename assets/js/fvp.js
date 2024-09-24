@@ -130,6 +130,8 @@ function toggleComplete(index) {
     }
     tasks[index].endTime = Date.now(); // Set endTime when task is completed
     promptForReflection(index); // Prompt for reflection after completing
+  } else {
+    tasks[index].endTime = null; // Clear endTime if task is reopened
   }
   saveTasksToLocalStorage(tasks);
   renderTasks();
@@ -140,11 +142,71 @@ function toggleComplete(index) {
 function promptForReflection(index) {
   const task = tasks[index];
   const elapsedTime = Math.ceil(task.cumulativeTimeInSeconds / 60); // Convert to minutes and round up
-  const reflection = prompt(`You completed "${task.text}" in ${elapsedTime} minutes. How did it go? Are you happy with the speed of execution?`);
-  if (reflection) {
-    const timestamp = formatDateTime(Date.now()); // Get current timestamp in the new format
-    tasks[index].comments = (tasks[index].comments || '') + (tasks[index].comments ? `\n` : '') + `[${timestamp}] ${reflection}`; // Concatenate reflection with timestamp
-  }
+
+  // Create a dialog for reflection and action buttons
+  const dialog = document.createElement('div');
+  dialog.classList.add('reflection-dialog');
+  dialog.innerHTML = `
+    <p>You worked on "${task.text}" for ${elapsedTime} minutes. How did it go?</p>
+    <textarea id="reflection-input" placeholder="Enter your reflection here..."></textarea>
+    <div class="dialog-actions">
+      <button id="complete-task-btn">Complete task now</button>
+      <button id="shelve-task-btn">Shelve task for later</button>
+      <button id="cancel-btn">Cancel</button>
+    </div>
+  `;
+  document.body.appendChild(dialog);
+
+  // Add event listeners for the buttons
+  document.getElementById('complete-task-btn').addEventListener('click', () => {
+    saveReflection(index, document.getElementById('reflection-input').value);
+    closeDialog(dialog);
+  });
+
+  document.getElementById('shelve-task-btn').addEventListener('click', () => {
+    saveReflection(index, document.getElementById('reflection-input').value);
+    shelveTask(index);
+    closeDialog(dialog);
+  });
+
+  document.getElementById('cancel-btn').addEventListener('click', () => {
+    tasks[index].completed = false; // Revert task to incomplete status
+    saveTasksToLocalStorage(tasks);
+    renderTasks();
+    closeDialog(dialog);
+  });
+}
+
+function saveReflection(index, reflection) {
+  const task = tasks[index];
+  const timestamp = formatDateTime(Date.now()); // Get current timestamp in the new format
+  task.comments = (task.comments || '') + (task.comments ? `\n` : '') + `[${timestamp}] Reflection: ${reflection}`;
+  saveTasksToLocalStorage(tasks);
+  renderTasks();
+}
+
+function shelveTask(index) {
+  const task = tasks[index];
+  const timestamp = formatDateTime(Date.now()); // Get current timestamp in the new format
+
+  const newTask = {
+    ...task,
+    completed: false,
+    marked: false,
+    cumulativeTimeInSeconds: 0,
+    lastStartedTime: null,
+    startTime: null,
+    endTime: null,
+    comments: `[${timestamp}] Shelved` // Clear previous comments and add shelved note
+  };
+  tasks.push(newTask);
+
+  saveTasksToLocalStorage(tasks);
+  renderTasks();
+}
+
+function closeDialog(dialog) {
+  document.body.removeChild(dialog);
 }
 
 function deleteTask(index) {
