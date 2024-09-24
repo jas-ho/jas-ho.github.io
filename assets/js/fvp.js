@@ -124,7 +124,6 @@ function toggleMark(index) {
 function toggleComplete(index) {
   tasks[index].completed = !tasks[index].completed;
   if (tasks[index].completed) {
-    tasks[index].marked = false;
     if (tasks[index].lastStartedTime !== null) {
       toggleStart(index); // Stop the timer when completing a task
     }
