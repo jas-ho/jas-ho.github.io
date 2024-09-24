@@ -323,10 +323,18 @@ document.getElementById('delete-all').addEventListener('click', function() {
 });
 
 document.getElementById('export-btn').addEventListener('click', function() {
+  const timestamp = new Date().toISOString().split('T')[0]; // Get YYYY-MM-DD format
+  console.log('Timestamp:', timestamp); // Debug log
+
+  const filename = `${timestamp}_FVP_tasks.md`;
+  console.log('Filename:', filename); // Debug log
+
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasks));
   const downloadAnchorNode = document.createElement('a');
   downloadAnchorNode.setAttribute("href", dataStr);
-  downloadAnchorNode.setAttribute("download", "tasks.json");
+  downloadAnchorNode.setAttribute("download", filename); // Use the filename variable here
+  console.log('Download attribute:', downloadAnchorNode.download); // Debug log
+
   document.body.appendChild(downloadAnchorNode);
   downloadAnchorNode.click();
   downloadAnchorNode.remove();
