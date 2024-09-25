@@ -570,7 +570,7 @@ function updateProgressBar() {
   progressBar.style.width = totalTasks > 0 ? `${(completedTasks / totalTasks) * 100}%` : '0%';
 
   // Update cumulative work time display in hh:mm format
-  document.getElementById('cumulative-time').textContent = `Cumulative Work Time: ${formatCumulativeTime(cumulativeTimeInSeconds)}`;
+  document.getElementById('cumulative-time').textContent = `Cumulative Work Time: ${formatCumulativeTime(cumulativeTimeInSeconds)} | Completed: ${completedTasks} | Total: ${totalTasks}`;
 
   // Set hover text for progress bar
   progressBar.setAttribute('data-hover', `${completedTasks} out of ${totalTasks} tasks completed`);
@@ -677,3 +677,10 @@ function parseTime(timeStr) {
 function findTaskByUUID(uuid) {
   return tasks.find(task => task.uuid === uuid);
 }
+
+document.getElementById('toggle-shortcuts').addEventListener('click', function() {
+  const shortcutsContent = document.getElementById('shortcuts-content');
+  const isVisible = shortcutsContent.style.display === 'block';
+
+  shortcutsContent.style.display = isVisible ? 'none' : 'block';
+});

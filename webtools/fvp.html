@@ -120,7 +120,7 @@ title: FVP Task Manager
   }
   #keyboard-shortcuts .key {
     font-weight: bold;
-    color: var(--link-color);
+    color: var(--link-color) !important; /* Ensures this color is applied */
   }
   #add-task-btn, #export-btn, #import-btn, #delete-all, #toggle-completed-btn, #clear-completed-btn {
     background-color: transparent;
@@ -340,6 +340,23 @@ title: FVP Task Manager
   .controls button:hover {
     color: var(--link-hover-color); /* Use theme variable for hover color */
   }
+
+  #time-and-shortcuts {
+    margin: 10px 0; /* Add some margin for spacing */
+    font-size: 1em; /* Ensure consistent font size */
+  }
+
+  #shortcuts-content li {
+    margin-bottom: 5px; /* Add some space between items */
+  }
+
+  #shortcuts-content .key {
+    display: inline-block; /* Make it an inline block to set width */
+    width: 40px; /* Set a fixed width for the shortcut keys */
+    text-align: center; /* Center the text within the key */
+    font-weight: bold;
+    color: var(--link-color); /* Ensure this variable is defined */
+  }
 </style>
 
 <div id="fvp-container">
@@ -352,10 +369,11 @@ title: FVP Task Manager
   <div id="progress-container">
     <div id="progress-bar"></div>
   </div>
-  <div id="cumulative-time">Cumulative Work Time: 0:00</div>
-
-  <div id="keyboard-shortcuts">
-    Keyboard shortcuts:
+  <div id="time-and-shortcuts" style="display: flex; justify-content: space-between; align-items: center;">
+    <div id="cumulative-time">Cumulative Work Time: 0:00 | Completed: 0 | Total: 0</div>
+    <span id="toggle-shortcuts" style="cursor: pointer; color: var(--link-color); text-decoration: underline;">Keyboard Shortcuts</span>
+  </div>
+  <div id="shortcuts-content" style="display: none;">
     <ul>
       <li><span class="key">↑↓</span> navigate</li>
       <li><span class="key">m</span> mark (★)</li>
