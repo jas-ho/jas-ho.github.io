@@ -229,6 +229,7 @@ title: FVP Task Manager
     border: 1px solid var(--border-color);
     border-radius: 5px;
     z-index: 10000;
+    border: 2px solid var(--link-color); /* Added border color */
   }
   .reflection-dialog p {
     margin: 0 0 10px;
@@ -244,17 +245,20 @@ title: FVP Task Manager
     padding: 5px;
   }
   .dialog-actions {
-    display: flex;
-    justify-content: space-between;
+    display: flex; /* Ensure buttons are in a flex container */
+    justify-content: space-between; /* Distribute buttons evenly */
   }
   .dialog-actions button {
+    flex: 1; /* Allow buttons to grow and take equal space */
     padding: 5px 10px;
     cursor: pointer;
     background-color: var(--btn-bg);
     color: var(--btn-color);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-color); /* Existing border */
     border-radius: 5px;
     transition: background-color 0.3s, color 0.3s;
+    border: 1px solid var(--link-color); /* Added thin border color */
+    margin: 0 5px; /* Optional: Add margin for spacing between buttons */
   }
   .dialog-actions button:hover {
     background-color: var(--btn-hover-bg);
