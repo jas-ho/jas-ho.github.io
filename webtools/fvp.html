@@ -355,13 +355,39 @@ title: FVP Task Manager
   .link-hover-color { color: var(--link-hover-color); }
   .input-color { color: var(--input-color); }
   .btn-color { color: var(--btn-color); }
+
+  
+
+  #time-and-shortcuts {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9em;
+    margin: 10px 0;
+  }
+
+  .info-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  .info-link:hover {
+    color: var(--link-color);
+  }
+
+  .separator {
+    margin: 0 8px;
+    color: var(--text-muted);
+  }
+
+  #toggle-shortcuts {
+    cursor: pointer;
+  }
 </style>
 
 <div id="fvp-container">
   <button id="fullscreen-toggle" class="btn-icon" title="Enter Fullscreen">⛶</button>
-  <div id="fvp-header">
-    <h1>{{ page.title }}</h1>
-  </div>
 
   <!-- Progress bar and cumulative time display -->
   <div id="progress-container">
@@ -369,7 +395,11 @@ title: FVP Task Manager
   </div>
   <div id="time-and-shortcuts">
     <div id="cumulative-time">Cumulative Work Time: 0:00 | Completed: 0 | Total: 0</div>
-    <span id="toggle-shortcuts" class="link-color">Keyboard Shortcuts</span>
+    <div>
+      <a href="/webtools/fvp-info.html" class="info-link" title="What is FVP?" target="_blank">What is FVP?</a>
+      <span class="separator">|</span>
+      <span id="toggle-shortcuts" class="link-color">Keyboard Shortcuts</span>
+    </div>
   </div>
   <div id="shortcuts-content" style="display: none;">
     <ul>
