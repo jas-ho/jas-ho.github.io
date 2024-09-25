@@ -7,7 +7,11 @@ title: FVP Task Manager
   #taskList { list-style-type: none; padding: 0; margin-bottom: 60px; }
   #taskList li { margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; padding: 5px; }
   .marked { font-weight: bold; }
-  .completed { color: var(--text-muted); text-decoration: line-through; }
+  .completed {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    opacity: 0.5; /* Added transparency */
+  }
   .last-marked { font-size: 1.2em; padding: 10px; border: 2px solid var(--link-color); border-radius: 5px; }
   .focused { background-color: var(--sidebar-bg); outline: 2px solid var(--link-color); }
   .task-text { flex-grow: 1; }
