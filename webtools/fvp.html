@@ -267,95 +267,78 @@ title: FVP Task Manager
 
   /* Adjust text color for light mode */
   body {
-    color: var(--text-color); /* Use the theme variable for text color */
+    color: var(--text-color);
   }
 
   /* Specific adjustments for light mode */
   .marked {
-    color: var(--link-color); /* Keep marked text color */
+    color: var(--link-color);
   }
 
   .completed {
-    color: var(--text-muted); /* Use muted color for completed tasks */
+    color: var(--text-muted);
   }
 
-  /* Adjust button text color */
   button {
-    color: var(--btn-color); /* Use theme variable for button text color */
+    color: var(--btn-color);
   }
 
-  /* Adjust other text elements as needed */
   #taskInput {
-    color: var(--input-color); /* Use theme variable for input text color */
+    color: var(--input-color);
   }
 
-  /* Reflection dialog text color */
   .reflection-dialog p {
-    color: var(--text-muted); /* Use muted color for dialog text */
+    color: var(--text-muted);
   }
 
   .reflection-dialog textarea {
-    color: var(--input-color); /* Use theme variable for textarea text color */
+    color: var(--input-color);
   }
 
-  /* Ensure hover states are also muted */
   button:hover {
-    color: var(--link-hover-color); /* Use theme variable for hover color */
+    color: var(--link-hover-color);
   }
-
-  /* Additional styles for light mode */
-  /* You can add more styles as needed */
 
   .controls button {
     background: none;
     border: none;
-    color: var(--text-muted); /* Use muted color for icons */
-    font-size: 1.2em; /* Adjust font size as needed */
+    color: var(--text-muted);
+    font-size: 1.2em;
     cursor: pointer;
     padding: 5px;
   }
 
   .controls button:hover {
-    color: var(--link-color); /* Change color on hover */
+    color: var(--link-color);
   }
 
   /* Specific styles for the buttons with icons */
-  .controls .mark-btn {
-    color: var(--text-muted); /* Use muted color for the mark button */
-  }
-
-  .controls .start-btn {
-    color: var(--text-muted); /* Use muted color for the start button */
-  }
-
-  .controls .complete-btn {
-    color: var(--text-muted); /* Use muted color for the complete button */
-  }
-
+  .controls .mark-btn,
+  .controls .start-btn,
+  .controls .complete-btn,
   .controls .delete-btn {
-    color: var(--text-muted); /* Use muted color for the delete button */
+    color: var(--text-muted);
   }
 
-  /* Ensure hover states are also muted */
   .controls button:hover {
-    color: var(--link-hover-color); /* Use theme variable for hover color */
+    color: var(--link-hover-color);
   }
 
   #time-and-shortcuts {
-    margin: 10px 0; /* Add some margin for spacing */
-    font-size: 1em; /* Ensure consistent font size */
+    margin: 10px 0;
+    font-size: 1em;
   }
 
   #shortcuts-content li {
-    margin-bottom: 5px; /* Add some space between items */
+    margin-bottom: 5px;
   }
 
   #shortcuts-content .key {
-    display: inline-block; /* Make it an inline block to set width */
-    width: 40px; /* Set a fixed width for the shortcut keys */
-    text-align: center; /* Center the text within the key */
+    display: inline-block;
+    width: 40px;
+    text-align: center;
     font-weight: bold;
-    color: var(--link-color); /* Ensure this variable is defined */
+    color: var(--link-color);
   }
 </style>
 
