@@ -120,64 +120,37 @@ title: FVP Task Manager
   }
   #keyboard-shortcuts .key {
     font-weight: bold;
-    color: var(--link-color) !important; /* Ensures this color is applied */
+    color: var(--link-color);
   }
   #add-task-btn, #export-btn, #import-btn, #delete-all, #toggle-completed-btn, #clear-completed-btn {
-    background-color: transparent;
-    color: var(--text-muted); /* Grey icon color */
-    border: none;
+    composes: btn-icon;
     padding: 5px 10px;
-    cursor: pointer;
     font-size: 1.5em; /* Increase font size for icons */
-    white-space: nowrap; /* Ensure no line breaks */
-    transition: color 0.3s, background-color 0.3s;
   }
   #add-task-btn:hover, #delete-all:hover, #export-btn:hover, #import-btn:hover, #toggle-completed-btn:hover, #clear-completed-btn:hover {
     color: var(--link-hover-color);
     background-color: rgba(255, 255, 255, 0.05); /* Slightly muted background on hover */
   }
-  #add-task-btn::after, #delete-all::after, #export-btn::after, #import-btn::after, #toggle-completed-btn::after, #clear-completed-btn::after {
-    content: attr(title);
-    display: block;
-    font-size: 0.8em;
-    color: var(--text-muted);
-    margin-top: 5px;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  #add-task-btn:hover::after, #delete-all:hover::after, #export-btn:hover::after, #import-btn:hover::after, #toggle-completed-btn:hover::after, #clear-completed-btn:hover::after {
-    opacity: 1;
-  }
   #task-actions {
     margin-top: 20px; /* Add space between the new tasks input line and the task actions line */
     display: flex;
     justify-content: space-between; /* Distribute buttons evenly */
-    width: 100%; /* Ensure the container takes full width */
+    width: 100%;
   }
   #task-actions button {
-    flex: 1; /* Allow buttons to grow and take equal space */
+    flex: 1 1 0;
+    margin: 0 2px;
+    min-width: 0;
     text-align: center; /* Center the content inside the buttons */
     position: relative; /* For positioning the hidden text */
+    composes: btn-icon;
   }
   #task-actions button i {
     display: block; /* Ensure the icon is displayed as a block element */
     margin: 0 auto; /* Center the icon */
   }
   #task-actions button::after {
-    content: attr(title);
-    display: block;
-    font-size: 0.8em;
-    color: var(--text-muted);
-    margin-top: 5px;
-    opacity: 0;
-    position: absolute;
-    top: 100%; /* Position below the button */
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
-  }
-  #task-actions button:hover::after {
-    opacity: 1;
+    display: none;
   }
   #progress-container {
     display: none; /* Hide the progress container */
@@ -325,8 +298,11 @@ title: FVP Task Manager
   }
 
   #time-and-shortcuts {
-    margin: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 1em;
+    margin: 10px 0;
   }
 
   #shortcuts-content li {
@@ -340,21 +316,60 @@ title: FVP Task Manager
     font-weight: bold;
     color: var(--link-color);
   }
+
+  /* Deduplicate button styles */
+  .btn-icon {
+    background-color: transparent;
+    color: var(--text-muted);
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 1.5em;
+    white-space: nowrap;
+    transition: color 0.3s, background-color 0.3s;
+  }
+  .btn-icon:hover {
+    color: var(--link-hover-color);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  .btn-icon::after {
+    content: attr(title);
+    display: block;
+    font-size: 0.9em;
+    color: var(--text-color);
+    margin-top: 5px;
+    opacity: 0;
+    transition: opacity 0.1s;
+    background-color: var(--tooltip-bg);
+    padding: 5px;
+    border-radius: 4px;
+  }
+  .btn-icon:hover::after {
+    opacity: 1;
+  }
+
+  /* Simplify repeated styles */
+  .text-color { color: var(--text-color); }
+  .text-muted { color: var(--text-muted); }
+  .link-color { color: var(--link-color); }
+  .link-hover-color { color: var(--link-hover-color); }
+  .input-color { color: var(--input-color); }
+  .btn-color { color: var(--btn-color); }
 </style>
 
 <div id="fvp-container">
-  <button id="fullscreen-toggle" title="Enter Fullscreen">⛶</button>
+  <button id="fullscreen-toggle" class="btn-icon" title="Enter Fullscreen">⛶</button>
   <div id="fvp-header">
-    <h1>FVP Task Manager</h1>
+    <h1>{{ page.title }}</h1>
   </div>
 
   <!-- Progress bar and cumulative time display -->
   <div id="progress-container">
     <div id="progress-bar"></div>
   </div>
-  <div id="time-and-shortcuts" style="display: flex; justify-content: space-between; align-items: center;">
+  <div id="time-and-shortcuts">
     <div id="cumulative-time">Cumulative Work Time: 0:00 | Completed: 0 | Total: 0</div>
-    <span id="toggle-shortcuts" style="cursor: pointer; color: var(--link-color); text-decoration: underline;">Keyboard Shortcuts</span>
+    <span id="toggle-shortcuts" class="link-color">Keyboard Shortcuts</span>
   </div>
   <div id="shortcuts-content" style="display: none;">
     <ul>
@@ -371,19 +386,18 @@ title: FVP Task Manager
   <ul id="taskList" tabindex="0"></ul>
   <div id="task-controls">
     <form id="newTaskForm" onsubmit="addTask(event)">
-      <input type="text" id="taskInput" placeholder="Enter a new task" required>
-      <button type="submit" id="add-task-btn" title="Add Task"><i class="fas fa-plus"></i></button>
+      <input type="text" id="taskInput" class="input-color" placeholder="Enter a new task" required>
+      <button type="submit" id="add-task-btn" class="btn-icon" title="Add Task"><i class="fas fa-plus"></i></button>
     </form>
   </div>
   <div id="task-actions">
-    <button id="export-btn" title="Export Tasks"><i class="fas fa-download"></i></button>
-    <button id="import-btn" title="Import Tasks"><i class="fas fa-upload"></i></button>
-    <button id="delete-all" title="Delete All Tasks"><i class="fas fa-trash"></i></button>
-    <button id="toggle-completed-btn" title="Hide/Unhide Completed Tasks"><i class="fas fa-eye"></i></button>
-    <button id="clear-completed-btn" title="Clear Completed Tasks"><i class="fas fa-broom"></i></button>
+    <button id="export-btn" class="btn-icon" title="Export Tasks"><i class="fas fa-download"></i></button>
+    <button id="import-btn" class="btn-icon" title="Import Tasks"><i class="fas fa-upload"></i></button>
+    <button id="delete-all" class="btn-icon" title="Delete All Tasks"><i class="fas fa-trash"></i></button>
+    <button id="toggle-completed-btn" class="btn-icon" title="Hide/Unhide Completed Tasks"><i class="fas fa-eye"></i></button>
+    <button id="clear-completed-btn" class="btn-icon" title="Clear Completed Tasks"><i class="fas fa-broom"></i></button>
     <input type="file" id="import-file" style="display: none;" accept=".json">
   </div>
 </div>
 
-<!-- Reference the external JavaScript file -->
-<script src="/assets/js/fvp.js"></script>
+<script src="{{ '/assets/js/fvp.js' | relative_url }}"></script>
