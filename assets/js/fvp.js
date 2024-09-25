@@ -1,5 +1,5 @@
 let tasks = [];
-let focusedIndex = -1;
+let focusedUUID = null;
 
 // Function to save tasks to LocalStorage with error handling
 function saveTasksToLocalStorage(tasks) {
@@ -22,8 +22,10 @@ function loadTasksFromLocalStorage() {
     if (serializedTasks) {
       const tasks = JSON.parse(serializedTasks);
       if (Array.isArray(tasks)) {
-        // Ensure each task has startTime and endTime properties
         tasks.forEach(task => {
+          if (!task.uuid) {
+            task.uuid = generateUUID();
+          }
           if (task.startTime === undefined) task.startTime = null;
           if (task.endTime === undefined) task.endTime = null;
         });
@@ -35,6 +37,15 @@ function loadTasksFromLocalStorage() {
   }
   return [];
 }
+
+  // Function to generate a UUIDv4
+  function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0; // Generate a random number between 0 and 15
+      const v = c === 'x' ? r : (r & 0x3 | 0x8); // Set the version to 4
+      return v.toString(16); // Convert to hexadecimal
+    });
+  }
 
 // New variable to track visibility of completed tasks
 let showCompletedTasks = true;
@@ -59,26 +70,31 @@ function renderTasks() {
   const taskList = document.getElementById('taskList');
   taskList.innerHTML = '';
   let lastMarkedIndex = tasks.findLastIndex(task => task.marked && !task.completed);
-  tasks.forEach((task, index) => {
+
+  tasks.forEach((task) => {
     if (task.completed && !showCompletedTasks) return; // Skip completed tasks if hidden
+
+    const index = tasks.indexOf(task);
     const li = document.createElement('li');
+    li.setAttribute('data-task-uuid', task.uuid); // Use UUID
+
     li.innerHTML = `
-      <span class="task-text" ondblclick="editTaskTitle(${index})">${task.text}</span>
-      <span class="stopwatch" ondblclick="editTaskTime(${index})">${formatTime(getDisplayedTime(task))}</span>
+      <span class="task-text" ondblclick="editTaskTitle('${task.uuid}')">${task.text}</span>
+      <span class="stopwatch" ondblclick="editTaskTime('${task.uuid}')">${formatTime(getDisplayedTime(task))}</span>
       <div class="controls">
-        <button class="start-btn" onclick="handleStartButtonClick(event, ${index})" title="Start">${task.lastStartedTime !== null ? '⏸' : '▶'}</button>
-        <button class="mark-btn" onclick="toggleMark(${index})" title="Mark">★</button>
-        <button class="complete-btn" onclick="toggleComplete(${index})" title="${task.completed ? 'Reopen' : 'Complete'}">✓</button>
-        <button class="delete-btn" onclick="deleteTask(${index})" title="Delete">×</button>
+        <button class="start-btn" onclick="handleStartButtonClick(event, '${task.uuid}')" title="Start">${task.lastStartedTime !== null ? '⏸' : '▶'}</button>
+        <button class="mark-btn" onclick="toggleMark('${task.uuid}')" title="Mark">★</button>
+        <button class="complete-btn" onclick="toggleComplete('${task.uuid}')" title="${task.completed ? 'Reopen' : 'Complete'}">✓</button>
+        <button class="delete-btn" onclick="deleteTask('${task.uuid}')" title="Delete">×</button>
       </div>
     `;
     li.setAttribute('tabindex', '0');
-    li.onclick = () => setFocus(index);
+    li.onclick = () => setFocus(task.uuid);
     if (task.marked) li.classList.add('marked');
     if (task.completed) li.classList.add('completed');
     if (task.lastStartedTime !== null) li.classList.add('running');
     if (index === lastMarkedIndex) li.classList.add('last-marked');
-    if (index === focusedIndex) li.classList.add('focused');
+    if (task.uuid === focusedUUID) li.classList.add('focused');
     taskList.appendChild(li);
   });
 
@@ -96,157 +112,175 @@ function addTask(event) {
   const input = document.getElementById('taskInput');
   if (input.value) {
     const newTask = {
+      uuid: generateUUID(), // Assign a UUID
       text: input.value,
       marked: false,
       completed: false,
       cumulativeTimeInSeconds: 0,
       lastStartedTime: null,
       startTime: null, // Add startTime property
-      endTime: null // Add endTime property
+      endTime: null, // Add endTime property
+      parentUUID: null // Set parentUUID to null for new tasks
     };
     tasks.push(newTask);
     input.value = '';
     saveTasksToLocalStorage(tasks);
     renderTasks();
     input.focus();
-    logInteraction('addTask', tasks.length - 1); // Log the action
+    logInteraction('addTask', newTask.uuid); // Log the action
   }
 }
 
-function toggleMark(index) {
-  tasks[index].marked = !tasks[index].marked;
-  saveTasksToLocalStorage(tasks);
-  renderTasks();
-  setFocus(index);
-  logInteraction('toggleMark', index); // Log the action
-}
-
-function toggleComplete(index) {
-  tasks[index].completed = !tasks[index].completed;
-  if (tasks[index].completed) {
-    if (tasks[index].lastStartedTime !== null) {
-      toggleStart(index); // Stop the timer when completing a task
-    }
-    tasks[index].endTime = Date.now(); // Set endTime when task is completed
-    promptForReflection(index); // Prompt for reflection after completing
-  } else {
-    tasks[index].endTime = null; // Clear endTime if task is reopened
-  }
-  saveTasksToLocalStorage(tasks);
-  renderTasks();
-  setFocus(index);
-  logInteraction('toggleComplete', index); // Log the action
-}
-
-function promptForReflection(index) {
-  const task = tasks[index];
-  const elapsedTime = Math.ceil(task.cumulativeTimeInSeconds / 60); // Convert to minutes and round up
-
-  // Create a dialog for reflection and action buttons
-  const dialog = document.createElement('div');
-  dialog.classList.add('reflection-dialog');
-  dialog.innerHTML = `
-    <p>You worked on "${task.text}" for ${elapsedTime} minutes. How did it go?</p>
-    <textarea id="reflection-input" placeholder="Enter your reflection here..."></textarea>
-    <div class="dialog-actions">
-      <button id="complete-task-btn">Complete task now</button>
-      <button id="shelve-task-btn">Shelve task for later</button>
-      <button id="cancel-btn">Cancel</button>
-    </div>
-  `;
-  document.body.appendChild(dialog);
-
-  // Add event listeners for the buttons
-  document.getElementById('complete-task-btn').addEventListener('click', () => {
-    saveReflection(index, document.getElementById('reflection-input').value);
-    closeDialog(dialog);
-  });
-
-  document.getElementById('shelve-task-btn').addEventListener('click', () => {
-    saveReflection(index, document.getElementById('reflection-input').value);
-    shelveTask(index);
-    closeDialog(dialog);
-  });
-
-  document.getElementById('cancel-btn').addEventListener('click', () => {
-    tasks[index].completed = false; // Revert task to incomplete status
+function toggleMark(uuid) {
+  const task = findTaskByUUID(uuid);
+  if (task) {
+    task.marked = !task.marked;
     saveTasksToLocalStorage(tasks);
     renderTasks();
-    closeDialog(dialog);
-  });
+    setFocus(uuid);
+    logInteraction('toggleMark', uuid);
+  }
 }
 
-function saveReflection(index, reflection) {
-  const task = tasks[index];
-  const timestamp = formatDateTime(Date.now()); // Get current timestamp in the new format
-  task.comments = (task.comments || '') + (task.comments ? `\n` : '') + `[${timestamp}] Reflection: ${reflection}`;
-  saveTasksToLocalStorage(tasks);
-  renderTasks();
+function toggleComplete(uuid) {
+  const task = findTaskByUUID(uuid);
+  if (task) {
+    task.completed = !task.completed;
+    if (task.completed) {
+      if (task.lastStartedTime !== null) {
+        toggleStart(uuid); // Stop timer
+      }
+      task.endTime = Date.now();
+      promptForReflection(uuid);
+    } else {
+      task.endTime = null;
+    }
+    saveTasksToLocalStorage(tasks);
+    renderTasks();
+    setFocus(uuid);
+    logInteraction('toggleComplete', uuid);
+  }
 }
 
-function shelveTask(index) {
-  const task = tasks[index];
-  const timestamp = formatDateTime(Date.now()); // Get current timestamp in the new format
+function promptForReflection(uuid) {
+  const task = findTaskByUUID(uuid);
+  if (task) {
+    const elapsedTime = Math.ceil(task.cumulativeTimeInSeconds / 60); // Convert to minutes and round up
 
-  const newTask = {
-    ...task,
-    completed: false,
-    marked: false,
-    cumulativeTimeInSeconds: 0,
-    lastStartedTime: null,
-    startTime: null,
-    endTime: null,
-    comments: `[${timestamp}] Shelved` // Clear previous comments and add shelved note
-  };
-  tasks.push(newTask);
+    // Create a dialog for reflection and action buttons
+    const dialog = document.createElement('div');
+    dialog.classList.add('reflection-dialog');
+    dialog.innerHTML = `
+      <p>You worked on "${task.text}" for ${elapsedTime} minutes. How did it go?</p>
+      <textarea id="reflection-input" placeholder="Enter your reflection here..."></textarea>
+      <div class="dialog-actions">
+        <button id="complete-task-btn">Complete task now</button>
+        <button id="shelve-task-btn">Shelve task for later</button>
+        <button id="cancel-btn">Cancel</button>
+      </div>
+    `;
+    document.body.appendChild(dialog);
 
-  saveTasksToLocalStorage(tasks);
-  renderTasks();
+    // Add event listeners for the buttons
+    document.getElementById('complete-task-btn').addEventListener('click', () => {
+      saveReflection(uuid, document.getElementById('reflection-input').value);
+      closeDialog(dialog);
+    });
+
+    document.getElementById('shelve-task-btn').addEventListener('click', () => {
+      saveReflection(uuid, document.getElementById('reflection-input').value);
+      shelveTask(uuid);
+      closeDialog(dialog);
+    });
+
+    document.getElementById('cancel-btn').addEventListener('click', () => {
+      task.completed = false; // Revert task to incomplete status
+      saveTasksToLocalStorage(tasks);
+      renderTasks();
+      closeDialog(dialog);
+    });
+  }
+}
+
+function saveReflection(uuid, reflection) {
+  const task = findTaskByUUID(uuid);
+  if (task) {
+    const timestamp = formatDateTime(Date.now()); // Get current timestamp in the new format
+    task.comments = (task.comments || '') + (task.comments ? `\n` : '') + `[${timestamp}] Reflection: ${reflection}`;
+    saveTasksToLocalStorage(tasks);
+    renderTasks();
+  }
+}
+
+function shelveTask(uuid) {
+  const task = findTaskByUUID(uuid);
+  if (task) {
+    const timestamp = formatDateTime(Date.now()); // Get current timestamp in the new format
+
+    const newTask = {
+      uuid: generateUUID(), // Generate a new UUID for the shelved task
+      text: task.text, // Keep the same text as the original task
+      completed: false,
+      marked: false,
+      cumulativeTimeInSeconds: 0,
+      lastStartedTime: null,
+      startTime: null,
+      endTime: null,
+      comments: `[${timestamp}] Shelved`, // Clear previous comments and add shelved note
+      parentUUID: uuid // Reference to the original task's UUID
+    };
+    tasks.push(newTask);
+
+    saveTasksToLocalStorage(tasks);
+    renderTasks();
+  }
 }
 
 function closeDialog(dialog) {
   document.body.removeChild(dialog);
 }
 
-function deleteTask(index) {
-  tasks.splice(index, 1);
-  saveTasksToLocalStorage(tasks);
-  renderTasks();
-  if (index > 0) {
-    setFocus(index - 1);
-  } else if (tasks.length > 0) {
-    setFocus(0);
-  } else {
-    focusedIndex = -1;
+function deleteTask(uuid) {
+  const index = tasks.findIndex(task => task.uuid === uuid);
+  if (index !== -1) {
+    tasks.splice(index, 1);
+    saveTasksToLocalStorage(tasks);
+    renderTasks();
+    if (tasks.length > 0) {
+      setFocus(tasks[Math.min(index, tasks.length - 1)].uuid);
+    } else {
+      focusedUUID = null;
+    }
+    logInteraction('deleteTask', uuid); // Log the action
   }
-  logInteraction('deleteTask', index); // Log the action
 }
 
 let isToggling = false;
 
-function toggleStart(index) {
-  if (isToggling) return; // Prevent multiple triggers
-  isToggling = true;
+function toggleStart(uuid) {
+  const task = findTaskByUUID(uuid);
+  if (task) {
+    if (isToggling) return; // Prevent multiple triggers
+    isToggling = true;
 
-  const task = tasks[index];
-  if (task.lastStartedTime === null) {
-    task.lastStartedTime = Date.now();
-    if (task.startTime === null) {
-      task.startTime = task.lastStartedTime; // Set startTime if not already set
+    if (task.lastStartedTime === null) {
+      task.lastStartedTime = Date.now();
+      if (task.startTime === null) {
+        task.startTime = task.lastStartedTime;
+      }
+    } else {
+      task.cumulativeTimeInSeconds += (Date.now() - task.lastStartedTime) / 1000;
+      task.lastStartedTime = null;
     }
-  } else {
-    task.cumulativeTimeInSeconds += (Date.now() - task.lastStartedTime) / 1000;
-    task.lastStartedTime = null;
-  }
-  saveTasksToLocalStorage(tasks);
-  renderTasks();
-  setFocus(index);
-  logInteraction('toggleStart', index); // Log the action
+    saveTasksToLocalStorage(tasks);
+    renderTasks();
+    setFocus(uuid);
+    logInteraction('toggleStart', uuid); // Log the action
 
-  // Reset the flag after a short delay
-  setTimeout(() => {
-    isToggling = false;
-  }, 100); // Adjust the delay as needed
+    setTimeout(() => {
+      isToggling = false;
+    }, 100);
+  }
 }
 
 function formatTime(seconds) {
@@ -264,8 +298,8 @@ function getDisplayedTime(task) {
   return task.cumulativeTimeInSeconds;
 }
 
-function setFocus(index) {
-  focusedIndex = index;
+function setFocus(uuid) {
+  focusedUUID = uuid;
   updateFocus();
 }
 
@@ -273,22 +307,19 @@ function updateFocus() {
   const taskItems = document.querySelectorAll('#taskList li');
   const taskInput = document.getElementById('taskInput');
   taskItems.forEach(item => item.classList.remove('focused'));
-  if (focusedIndex >= 0 && focusedIndex < taskItems.length) {
-    if (tasks[focusedIndex].lastStartedTime !== null) {
-      toggleStart(focusedIndex); // Pause the timer when moving away
+  if (focusedUUID) {
+    const focusedItem = document.querySelector(`li[data-task-uuid="${focusedUUID}"]`);
+    if (focusedItem) {
+      focusedItem.classList.add('focused');
+      focusedItem.focus();
+    } else {
+      // If the focused item is not found, focus the input box
+      focusedUUID = null;
+      taskInput.focus();
     }
-    taskItems[focusedIndex].classList.add('focused');
-    taskItems[focusedIndex].focus();
-  } else if (focusedIndex === -1 || focusedIndex >= taskItems.length) {
-    // If we've gone past the last item or to the input box, focus the input box
+  } else {
+    // No task is focused, focus the input box
     taskInput.focus();
-    // Ensure no task has the 'focused' class
-    taskItems.forEach(item => item.classList.remove('focused'));
-  } else if (taskItems.length > 0) {
-    // If focusedIndex is out of bounds but there are tasks, focus on the last one
-    focusedIndex = taskItems.length - 1;
-    taskItems[focusedIndex].classList.add('focused');
-    taskItems[focusedIndex].focus();
   }
 }
 
@@ -317,20 +348,20 @@ document.getElementById('fullscreen-toggle').addEventListener('click', toggleFul
 
 function focusFirstTask() {
   if (tasks.length > 0) {
-    focusedIndex = 0;
+    focusedUUID = tasks[0].uuid;
     updateFocus();
   }
 }
 
 function focusInputBox() {
-  focusedIndex = -1;
+  focusedUUID = null;
   updateFocus();
 }
 
 // Function to log interactions
-function logInteraction(action, index) {
-  const task = tasks[index] || null; // Get the task or null if index is invalid
-  console.log(`Action: ${action}`, { index, task });
+function logInteraction(action, uuid) {
+  const task = findTaskByUUID(uuid) || null; // Get the task or null if uuid is invalid
+  console.log(`Action: ${action}`, { uuid, task });
 }
 
 document.addEventListener('keydown', function(e) {
@@ -344,9 +375,9 @@ document.addEventListener('keydown', function(e) {
       focusFirstTask();
       e.preventDefault();
     } else if (e.key === 'ArrowUp' && tasks.length > 0) {
-      focusedIndex = tasks.length - 1;
+      focusedUUID = tasks[tasks.length - 1].uuid;
       updateFocus();
-      logInteraction('navigate', focusedIndex); // Log the action
+      logInteraction('navigate', focusedUUID); // Log the action
       e.preventDefault();
     }
     return;
@@ -359,59 +390,64 @@ document.addEventListener('keydown', function(e) {
     focusFirstTask();
     e.preventDefault();
   } else if (document.activeElement === taskList || document.activeElement.closest('#taskList')) {
-    switch(e.key) {
-      case 'ArrowUp':
-        if (focusedIndex > 0) {
-          focusedIndex--;
-          updateFocus();
-          logInteraction('navigate', focusedIndex); // Log the action
-        } else if (focusedIndex === 0) {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      const visibleTasks = tasks.filter(task => !(task.completed && !showCompletedTasks));
+      const currentIndex = visibleTasks.findIndex(task => task.uuid === focusedUUID);
+
+      if (e.key === 'ArrowUp') {
+        if (currentIndex > 0) {
+          setFocus(visibleTasks[currentIndex - 1].uuid);
+        } else {
           // If at the first item, wrap to the input box
           focusInputBox();
         }
-        e.preventDefault();
-        break;
-      case 'ArrowDown':
-        focusedIndex = Math.min(tasks.length, focusedIndex + 1);
-        updateFocus();
-        logInteraction('navigate', focusedIndex); // Log the action
-        e.preventDefault();
-        break;
-      case 'm':
-        if (focusedIndex !== -1) {
-          toggleMark(focusedIndex);
-          logInteraction('mark', focusedIndex); // Log the action
+      } else if (e.key === 'ArrowDown') {
+        if (currentIndex < visibleTasks.length - 1) {
+          setFocus(visibleTasks[currentIndex + 1].uuid);
+        } else {
+          // If at the last item, wrap to the input box
+          focusInputBox();
         }
-        break;
-      case 'c':
-        if (focusedIndex !== -1) {
-          toggleComplete(focusedIndex);
-          logInteraction('complete', focusedIndex); // Log the action
-        }
-        break;
-      case 'n':
-        focusInputBox();
-        logInteraction('focusInput', focusedIndex); // Log the action
-        e.preventDefault();
-        break;
-      case 'd':
-        if (focusedIndex !== -1) {
-          deleteTask(focusedIndex);
-          logInteraction('delete', focusedIndex); // Log the action
-          e.stopPropagation();
+      }
+      e.preventDefault();
+    } else {
+      switch (e.key) {
+        case 'm':
+          if (focusedUUID) {
+            toggleMark(focusedUUID);
+            logInteraction('mark', focusedUUID); // Log the action
+          }
+          break;
+        case 'c':
+          if (focusedUUID) {
+            toggleComplete(focusedUUID);
+            logInteraction('complete', focusedUUID); // Log the action
+          }
+          break;
+        case 'n':
+          focusInputBox();
+          logInteraction('focusInput', focusedUUID); // Log the action
           e.preventDefault();
-        }
-        break;
-      case 's':
-        if (focusedIndex !== -1) {
-          toggleStart(focusedIndex);
-          logInteraction('start', focusedIndex); // Log the action
-        }
-        break;
-      case 'h':
-        toggleCompletedTasks();
-        logInteraction('toggleCompletedTasks', focusedIndex); // Log the action
-        break;
+          break;
+        case 'd':
+          if (focusedUUID) {
+            deleteTask(focusedUUID);
+            logInteraction('delete', focusedUUID); // Log the action
+            e.stopPropagation();
+            e.preventDefault();
+          }
+          break;
+        case 's':
+          if (focusedUUID) {
+            toggleStart(focusedUUID);
+            logInteraction('start', focusedUUID); // Log the action
+          }
+          break;
+        case 'h':
+          toggleCompletedTasks();
+          logInteraction('toggleCompletedTasks', focusedUUID); // Log the action
+          break;
+      }
     }
   }
 });
@@ -495,22 +531,24 @@ window.addEventListener('storage', (event) => {
 });
 
 // New function to handle the start button click
-function handleStartButtonClick(event, index) {
+function handleStartButtonClick(event, uuid) {
   event.stopPropagation(); // Prevent event bubbling
   event.preventDefault(); // Prevent default button behavior
-  toggleStart(index); // Call the toggleStart function
+  toggleStart(uuid); // Call the toggleStart function
 }
 
 // Function to update the displayed time for each task
 function updateDisplayedTimes() {
-  const taskList = document.getElementById('taskList');
-  const taskItems = taskList.querySelectorAll('li');
+  const taskItems = document.querySelectorAll('#taskList li');
 
-  taskItems.forEach((item, index) => {
-    const task = tasks[index];
-    const stopwatch = item.querySelector('.stopwatch');
-    if (stopwatch) {
-      stopwatch.innerHTML = formatTime(getDisplayedTime(task));
+  taskItems.forEach((item) => {
+    const uuid = item.getAttribute('data-task-uuid');
+    const task = findTaskByUUID(uuid);
+    if (task) {
+      const stopwatch = item.querySelector('.stopwatch');
+      if (stopwatch) {
+        stopwatch.innerHTML = formatTime(getDisplayedTime(task));
+      }
     }
   });
 }
@@ -560,78 +598,82 @@ function formatDateTime(timestamp) {
 }
 
 // Function to edit task title
-function editTaskTitle(index) {
-  const task = tasks[index];
-  const taskList = document.getElementById('taskList');
-  const taskItem = taskList.children[index];
+function editTaskTitle(uuid) {
+  const task = findTaskByUUID(uuid);
+  if (!task) return; // Handle case where task is not found
+
+  const taskItem = document.querySelector(`li[data-task-uuid="${uuid}"]`);
   const taskText = taskItem.querySelector('.task-text');
 
+  // Replace the task text with an input for editing
   const input = document.createElement('input');
   input.type = 'text';
   input.value = task.text;
-  input.onblur = () => {
+  input.onblur = function() {
     task.text = input.value;
     saveTasksToLocalStorage(tasks);
     renderTasks();
   };
-  input.onkeydown = (e) => {
+  input.onkeydown = function(e) {
     if (e.key === 'Enter') {
-      input.blur();
+      task.text = input.value;
+      saveTasksToLocalStorage(tasks);
+      renderTasks();
     }
   };
-
   taskText.replaceWith(input);
   input.focus();
 }
 
 // Function to edit task cumulative time
-function editTaskTime(index) {
-  const task = tasks[index];
-  const taskList = document.getElementById('taskList');
-  const taskItem = taskList.children[index];
+function editTaskTime(uuid) {
+  const task = findTaskByUUID(uuid);
+  if (!task) return;
+
+  const taskItem = document.querySelector(`li[data-task-uuid="${uuid}"]`);
   const stopwatch = taskItem.querySelector('.stopwatch');
 
+  // Create an input for editing time
   const input = document.createElement('input');
   input.type = 'text';
   input.value = formatTime(getDisplayedTime(task));
-  input.onblur = () => {
-    const timeParts = input.value.split(':').map(Number);
-    let newCumulativeTimeInSeconds = 0;
 
-    if (timeParts.length === 3) {
-      // Format: hh:mm:ss
-      const [hours, mins, secs] = timeParts;
-      if (!isNaN(hours) && !isNaN(mins) && !isNaN(secs)) {
-        newCumulativeTimeInSeconds = hours * 3600 + mins * 60 + secs;
-      }
-    } else if (timeParts.length === 2) {
-      // Format: mm:ss
-      const [mins, secs] = timeParts;
-      if (!isNaN(mins) && !isNaN(secs)) {
-        newCumulativeTimeInSeconds = mins * 60 + secs;
-      }
-    }
+  input.onblur = function() {
+    const seconds = parseTime(input.value);
+    task.cumulativeTimeInSeconds = seconds;
+    saveTasksToLocalStorage(tasks);
+    renderTasks();
+  };
 
-    if (newCumulativeTimeInSeconds > 0) {
-      if (task.lastStartedTime !== null) {
-        // If the task is running, adjust the lastStartedTime to keep the timer accurate
-        const elapsedTime = (Date.now() - task.lastStartedTime) / 1000;
-        task.lastStartedTime = Date.now() - (newCumulativeTimeInSeconds - task.cumulativeTimeInSeconds - elapsedTime) * 1000;
-      }
-      task.cumulativeTimeInSeconds = newCumulativeTimeInSeconds;
+  input.onkeydown = function(e) {
+    if (e.key === 'Enter') {
+      const seconds = parseTime(input.value);
+      task.cumulativeTimeInSeconds = seconds;
       saveTasksToLocalStorage(tasks);
       renderTasks();
-    } else {
-      // If the input is invalid, revert to the original time
-      renderTasks();
-    }
-  };
-  input.onkeydown = (e) => {
-    if (e.key === 'Enter') {
-      input.blur();
     }
   };
 
   stopwatch.replaceWith(input);
   input.focus();
+}
+
+// Helper function to parse time string to seconds
+function parseTime(timeStr) {
+  const parts = timeStr.split(':').map(Number);
+  if (parts.length === 3) {
+    // Format: hh:mm:ss
+    const [hours, mins, secs] = parts;
+    return hours * 3600 + mins * 60 + secs;
+  } else if (parts.length === 2) {
+    // Format: mm:ss
+    const [mins, secs] = parts;
+    return mins * 60 + secs;
+  }
+  return 0;
+}
+
+// Helper function to find a task by UUID
+function findTaskByUUID(uuid) {
+  return tasks.find(task => task.uuid === uuid);
 }
