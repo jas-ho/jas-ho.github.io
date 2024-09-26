@@ -69,7 +69,7 @@ function clearCompletedTasks() {
 function renderTasks() {
   const taskList = document.getElementById('taskList');
   taskList.innerHTML = '';
-  let lastMarkedIndex = tasks.findLastIndex(task => task.marked && !task.completed);
+  let lastMarkedTask = getCurrentBenchmarkTask(); // Use the new function
 
   tasks.forEach((task) => {
     if (task.completed && !showCompletedTasks) return; // Skip completed tasks if hidden
@@ -93,7 +93,7 @@ function renderTasks() {
     if (task.marked) li.classList.add('marked');
     if (task.completed) li.classList.add('completed');
     if (task.lastStartedTime !== null) li.classList.add('running');
-    if (index === lastMarkedIndex) li.classList.add('last-marked');
+    if (task === lastMarkedTask) li.classList.add('last-marked'); // Highlight the last marked task
     if (task.uuid === focusedUUID) li.classList.add('focused');
     taskList.appendChild(li);
   });
@@ -447,6 +447,10 @@ document.addEventListener('keydown', function(e) {
           toggleCompletedTasks();
           logInteraction('toggleCompletedTasks', focusedUUID); // Log the action
           break;
+        case 'p':
+          initiatePreselection();
+          e.preventDefault();
+          break;
       }
     }
   }
@@ -683,4 +687,130 @@ document.getElementById('toggle-shortcuts').addEventListener('click', function()
   const isVisible = shortcutsContent.style.display === 'block';
 
   shortcutsContent.style.display = isVisible ? 'none' : 'block';
+});
+
+// Function to find the last completed marked task
+function getPreviousBenchmarkTask() {
+  const previousBenchmarkTask = tasks.slice().reverse().find(task => task.marked && task.completed);
+  // console.log('Previous Benchmark Task:', previousBenchmarkTask);
+  return previousBenchmarkTask;
+}
+
+// Function to find the last uncompleted marked task
+function getCurrentBenchmarkTask() {
+  const currentBenchmarkTask = tasks.slice().reverse().find(task => task.marked && !task.completed);
+  // console.log('Current Benchmark Task:', currentBenchmarkTask);
+  return currentBenchmarkTask;
+}
+
+// Function to get the next uncompleted task after the given task
+function getNextUncompletedTask(task) {
+  const startIndex = tasks.indexOf(task) + 1;
+  const nextUncompletedTask = tasks.slice(startIndex).find(t => !t.completed);
+  // console.log('Next Uncompleted Task:', nextUncompletedTask);
+  return nextUncompletedTask;
+}
+
+// Function to initiate the preselection process
+function initiatePreselection(lastConsideredTask = null) {
+  console.log('Initiating Preselection');
+
+  const previousBenchmarkTask = getPreviousBenchmarkTask();
+  console.log('Previous Benchmark Task:', previousBenchmarkTask);
+
+  let currentBenchmarkTask = getCurrentBenchmarkTask();
+  if (!currentBenchmarkTask) {
+    console.log('No current benchmark task, starting with the first uncompleted task');
+    currentBenchmarkTask = tasks.find(task => !task.completed);
+    if (currentBenchmarkTask) {
+      toggleMark(currentBenchmarkTask.uuid);
+    }
+  }
+  console.log('Current Benchmark Task:', currentBenchmarkTask);
+
+  let nextConsideredTask;
+  if (lastConsideredTask) {
+    nextConsideredTask = getNextUncompletedTask(lastConsideredTask);
+  } else if (previousBenchmarkTask) {
+    const previousIndex = tasks.indexOf(previousBenchmarkTask);
+    const currentIndex = tasks.indexOf(currentBenchmarkTask);
+    if (previousIndex < currentIndex) {
+      console.log('Previous Benchmark Task is before the Current Benchmark Task');
+      nextConsideredTask = getNextUncompletedTask(currentBenchmarkTask);
+    } else {
+      nextConsideredTask = getNextUncompletedTask(previousBenchmarkTask);
+      if (nextConsideredTask === undefined) {
+        console.log('Next considered task is undefined, getting next uncompleted from current benchmark task');
+        nextConsideredTask = getNextUncompletedTask(currentBenchmarkTask);
+      }
+    }
+  } else {
+    nextConsideredTask = getNextUncompletedTask(currentBenchmarkTask);
+  }
+  console.log('Next Considered Task:', nextConsideredTask);
+
+  if (nextConsideredTask && nextConsideredTask !== currentBenchmarkTask) {
+    compareTasks(currentBenchmarkTask, nextConsideredTask);
+  } else {
+    finalizePreselection();
+  }
+}
+
+// Function to compare two tasks and update marked status if necessary
+function compareTasks(benchmarkTask, nextConsideredTask) {
+  // Create a dialog for task comparison
+  const dialog = document.createElement('div');
+  dialog.classList.add('comparison-dialog');
+  dialog.innerHTML = `
+    <p>Which task do you prefer to do next?</p>
+    <div class="task-comparison">
+      <div class="task-option" id="benchmark-task">
+        <p>${benchmarkTask ? benchmarkTask.text : 'No benchmark task'}</p>
+        <button id="choose-benchmark">Choose this task</button>
+      </div>
+      <div class="task-option" id="next-considered-task">
+        <p>${nextConsideredTask.text}</p>
+        <button id="choose-next">Choose this task</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(dialog);
+
+  // Add event listeners for the buttons
+  document.getElementById('choose-benchmark').addEventListener('click', () => {
+    closeDialog(dialog);
+    // Continue with the next uncompleted task after the current benchmark task
+    initiatePreselection(nextConsideredTask);
+  });
+
+  document.getElementById('choose-next').addEventListener('click', () => {
+    if (!nextConsideredTask.marked) {
+      toggleMark(nextConsideredTask.uuid);
+    }
+    closeDialog(dialog);
+    initiatePreselection(nextConsideredTask);
+  });
+
+  console.log('Comparing Tasks:', { benchmarkTask, nextConsideredTask });
+}
+
+// Function to close the comparison dialog
+function closeDialog(dialog) {
+  document.body.removeChild(dialog);
+}
+
+// Function to finalize the preselection process; a placeholder for future functionality
+function finalizePreselection() {
+  console.log('Finalizing Preselection');
+  const currentBenchmarkTask = getCurrentBenchmarkTask();
+  if (currentBenchmarkTask) {
+    console.log('Top Priority Task:', currentBenchmarkTask);
+    // Add logic to execute the top priority task or notify the user
+  } else {
+    console.log('No tasks to execute.');
+  }
+}
+
+document.getElementById('preselection-btn').addEventListener('click', function() {
+  initiatePreselection();
 });
