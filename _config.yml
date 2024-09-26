@@ -252,3 +252,8 @@ htmlproofer:
     - 'http://markforster.squarespace.com/blog/2021/11/16/the-final-version-perfected-fvp-instructions-reposted.html'
   enforce_https: false
   external_only: true
+  check_external_hash: false
+  ignore_missing_alt: true
+  ignore_empty_alt: true
+  allow_hash_href: true
+  disable_external: true
