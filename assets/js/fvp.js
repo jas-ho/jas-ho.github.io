@@ -259,21 +259,39 @@ function deleteTask(uuid) {
 
 let isToggling = false;
 
+function startTask(task) {
+  task.lastStartedTime = Date.now();
+  if (task.startTime === null) {
+    task.startTime = task.lastStartedTime;
+  }
+}
+
+function stopTask(task) {
+  if (task.lastStartedTime !== null) {
+    task.cumulativeTimeInSeconds += (Date.now() - task.lastStartedTime) / 1000;
+    task.lastStartedTime = null;
+  }
+}
+
 function toggleStart(uuid) {
   const task = findTaskByUUID(uuid);
   if (task) {
     if (isToggling) return; // Prevent multiple triggers
     isToggling = true;
 
-    if (task.lastStartedTime === null) {
-      task.lastStartedTime = Date.now();
-      if (task.startTime === null) {
-        task.startTime = task.lastStartedTime;
+    // Stop all other running tasks
+    tasks.forEach(t => {
+      if (t.lastStartedTime !== null && t.uuid !== uuid) {
+        stopTask(t);
       }
+    });
+
+    if (task.lastStartedTime === null) {
+      startTask(task);
     } else {
-      task.cumulativeTimeInSeconds += (Date.now() - task.lastStartedTime) / 1000;
-      task.lastStartedTime = null;
+      stopTask(task);
     }
+
     saveTasksToLocalStorage(tasks);
     renderTasks();
     setFocus(uuid);
