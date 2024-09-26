@@ -141,28 +141,43 @@ function toggleMark(uuid) {
     logInteraction('toggleMark', uuid);
   }
 }
-
 function toggleComplete(uuid) {
   const task = findTaskByUUID(uuid);
-  if (task) {
-    task.completed = !task.completed;
-    if (task.completed) {
-      if (task.lastStartedTime !== null) {
-        toggleStart(uuid); // Stop timer
-      }
-      task.endTime = Date.now();
-      promptForReflection(uuid);
-    } else {
-      task.endTime = null;
-    }
-    saveTasksToLocalStorage(tasks);
-    renderTasks();
-    setFocus(uuid);
-    logInteraction('toggleComplete', uuid);
+  if (!task) return;
+  setFocus(uuid);
+
+  if (task.completed) {
+    reopenTask(uuid);
+  } else {
+    completeTask(uuid);
   }
 }
 
-function promptForReflection(uuid) {
+function completeTask(uuid) {
+  logInteraction('completeTask', uuid);
+  promptForReflection(uuid, () => {
+    const task = findTaskByUUID(uuid);
+    if (task) {
+      stopTask(task);
+      task.completed = true;
+      saveTasksToLocalStorage(tasks);
+      renderTasks();
+    }
+  });
+}
+
+function reopenTask(uuid) {
+  logInteraction('reopenTask', uuid);
+  const task = findTaskByUUID(uuid);
+  if (task) {
+    task.endTime = null;
+    task.completed = false;
+    saveTasksToLocalStorage(tasks);
+    renderTasks();
+  }
+}
+
+function promptForReflection(uuid, onComplete) {
   const task = findTaskByUUID(uuid);
   if (task) {
     const elapsedTime = Math.ceil(task.cumulativeTimeInSeconds / 60); // Convert to minutes and round up
@@ -185,6 +200,7 @@ function promptForReflection(uuid) {
     document.getElementById('complete-task-btn').addEventListener('click', () => {
       saveReflection(uuid, document.getElementById('reflection-input').value);
       closeDialog(dialog);
+      onComplete(); // Call the onComplete callback
       initiatePreselection(); // Auto-trigger preselection
     });
 
@@ -192,6 +208,7 @@ function promptForReflection(uuid) {
       saveReflection(uuid, document.getElementById('reflection-input').value);
       shelveTask(uuid);
       closeDialog(dialog);
+      onComplete(); // Call the onComplete callback
       initiatePreselection(); // Auto-trigger preselection
     });
 
@@ -239,7 +256,9 @@ function shelveTask(uuid) {
 }
 
 function closeDialog(dialog) {
-  document.body.removeChild(dialog);
+  if (document.body.contains(dialog)) {
+    document.body.removeChild(dialog);
+  }
 }
 
 function deleteTask(uuid) {
@@ -270,6 +289,7 @@ function stopTask(task) {
   if (task.lastStartedTime !== null) {
     task.cumulativeTimeInSeconds += (Date.now() - task.lastStartedTime) / 1000;
     task.lastStartedTime = null;
+    task.endTime = Date.now();
   }
 }
 
@@ -697,7 +717,6 @@ function parseTime(timeStr) {
   return 0;
 }
 
-// Helper function to find a task by UUID
 function findTaskByUUID(uuid) {
   return tasks.find(task => task.uuid === uuid);
 }
@@ -841,7 +860,9 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
 
 // Function to close the comparison dialog
 function closeDialog(dialog) {
-  document.body.removeChild(dialog);
+  if (document.body.contains(dialog)) {
+    document.body.removeChild(dialog);
+  }
 }
 
 // Function to finalize the preselection process; a placeholder for future functionality
