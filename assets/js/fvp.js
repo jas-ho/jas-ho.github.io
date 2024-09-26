@@ -1,7 +1,6 @@
 let tasks = [];
 let focusedUUID = null;
 
-// Function to save tasks to LocalStorage with error handling
 function saveTasksToLocalStorage(tasks) {
   try {
     const serializedTasks = JSON.stringify(tasks);
@@ -15,7 +14,6 @@ function saveTasksToLocalStorage(tasks) {
   }
 }
 
-// Function to load tasks from LocalStorage with validation
 function loadTasksFromLocalStorage() {
   try {
     const serializedTasks = localStorage.getItem('tasks');
@@ -38,25 +36,21 @@ function loadTasksFromLocalStorage() {
   return [];
 }
 
-  // Function to generate a UUIDv4
-  function generateUUID() {
+function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
       const r = Math.random() * 16 | 0; // Generate a random number between 0 and 15
       const v = c === 'x' ? r : (r & 0x3 | 0x8); // Set the version to 4
       return v.toString(16); // Convert to hexadecimal
-    });
-  }
+  });
+}
 
-// New variable to track visibility of completed tasks
 let showCompletedTasks = true;
 
-// Function to toggle visibility of completed tasks
 function toggleCompletedTasks() {
   showCompletedTasks = !showCompletedTasks;
   renderTasks();
 }
 
-// Function to clear completed tasks
 function clearCompletedTasks() {
   if (confirm('Are you sure you want to delete all completed tasks?')) {
     tasks = tasks.filter(task => !task.completed);
@@ -98,12 +92,9 @@ function renderTasks() {
     taskList.appendChild(li);
   });
 
-  // If the task list is empty, focus on the input box
   if (tasks.length === 0) {
     focusInputBox();
   }
-
-  // Update the progress bar after rendering tasks
   updateProgressBar();
 }
 
@@ -112,22 +103,22 @@ function addTask(event) {
   const input = document.getElementById('taskInput');
   if (input.value) {
     const newTask = {
-      uuid: generateUUID(), // Assign a UUID
+      uuid: generateUUID(),
       text: input.value,
       marked: false,
       completed: false,
       cumulativeTimeInSeconds: 0,
       lastStartedTime: null,
-      startTime: null, // Add startTime property
-      endTime: null, // Add endTime property
-      parentUUID: null // Set parentUUID to null for new tasks
+      startTime: null,
+      endTime: null,
+      parentUUID: null
     };
     tasks.push(newTask);
     input.value = '';
     saveTasksToLocalStorage(tasks);
     renderTasks();
     input.focus();
-    logInteraction('addTask', newTask.uuid); // Log the action
+    logInteraction('addTask', newTask.uuid);
   }
 }
 
@@ -224,7 +215,7 @@ function promptForReflection(uuid, onComplete) {
 function saveReflection(uuid, reflection) {
   const task = findTaskByUUID(uuid);
   if (task) {
-    const timestamp = formatDateTime(Date.now()); // Get current timestamp in the new format
+    const timestamp = formatDateTime(Date.now());
     task.comments = (task.comments || '') + (task.comments ? `\n` : '') + `[${timestamp}] Reflection: ${reflection}`;
     saveTasksToLocalStorage(tasks);
     renderTasks();
@@ -234,7 +225,7 @@ function saveReflection(uuid, reflection) {
 function shelveTask(uuid) {
   const task = findTaskByUUID(uuid);
   if (task) {
-    const timestamp = formatDateTime(Date.now()); // Get current timestamp in the new format
+    const timestamp = formatDateTime(Date.now());
 
     const newTask = {
       uuid: generateUUID(), // Generate a new UUID for the shelved task
@@ -272,7 +263,7 @@ function deleteTask(uuid) {
     } else {
       focusedUUID = null;
     }
-    logInteraction('deleteTask', uuid); // Log the action
+    logInteraction('deleteTask', uuid);
   }
 }
 
@@ -315,7 +306,7 @@ function toggleStart(uuid) {
     saveTasksToLocalStorage(tasks);
     renderTasks();
     setFocus(uuid);
-    logInteraction('toggleStart', uuid); // Log the action
+    logInteraction('toggleStart', uuid);
 
     setTimeout(() => {
       isToggling = false;
@@ -398,9 +389,8 @@ function focusInputBox() {
   updateFocus();
 }
 
-// Function to log interactions
 function logInteraction(action, uuid) {
-  const task = findTaskByUUID(uuid) || null; // Get the task or null if uuid is invalid
+  const task = findTaskByUUID(uuid) || null;
   console.log(`Action: ${action}`, { uuid, task });
 }
 
@@ -455,24 +445,24 @@ document.addEventListener('keydown', function(e) {
         case 'm':
           if (focusedUUID) {
             toggleMark(focusedUUID);
-            logInteraction('mark', focusedUUID); // Log the action
+            logInteraction('mark', focusedUUID);
           }
           break;
         case 'c':
           if (focusedUUID) {
             toggleComplete(focusedUUID);
-            logInteraction('complete', focusedUUID); // Log the action
+            logInteraction('complete', focusedUUID);
           }
           break;
         case 'n':
           focusInputBox();
-          logInteraction('focusInput', focusedUUID); // Log the action
+          logInteraction('focusInput', focusedUUID);
           e.preventDefault();
           break;
         case 'd':
           if (focusedUUID) {
             deleteTask(focusedUUID);
-            logInteraction('delete', focusedUUID); // Log the action
+            logInteraction('delete', focusedUUID);
             e.stopPropagation();
             e.preventDefault();
           }
@@ -480,12 +470,12 @@ document.addEventListener('keydown', function(e) {
         case 's':
           if (focusedUUID) {
             toggleStart(focusedUUID);
-            logInteraction('start', focusedUUID); // Log the action
+            logInteraction('start', focusedUUID);
           }
           break;
         case 'h':
           toggleCompletedTasks();
-          logInteraction('toggleCompletedTasks', focusedUUID); // Log the action
+          logInteraction('toggleCompletedTasks', focusedUUID);
           break;
         case 'p':
           initiatePreselection();
@@ -506,17 +496,17 @@ document.getElementById('delete-all').addEventListener('click', function() {
 });
 
 document.getElementById('export-btn').addEventListener('click', function() {
-  const timestamp = new Date().toISOString().split('T')[0]; // Get YYYY-MM-DD format
-  console.log('Timestamp:', timestamp); // Debug log
+  const timestamp = new Date().toISOString().split('T')[0];
+  console.log('Timestamp:', timestamp);
 
   const filename = `${timestamp}_FVP_tasks.json`;
-  console.log('Filename:', filename); // Debug log
+  console.log('Filename:', filename);
 
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasks));
   const downloadAnchorNode = document.createElement('a');
   downloadAnchorNode.setAttribute("href", dataStr);
-  downloadAnchorNode.setAttribute("download", filename); // Use the filename variable here
-  console.log('Download attribute:', downloadAnchorNode.download); // Debug log
+  downloadAnchorNode.setAttribute("download", filename);
+  console.log('Download attribute:', downloadAnchorNode.download);
 
   document.body.appendChild(downloadAnchorNode);
   downloadAnchorNode.click();
@@ -574,14 +564,12 @@ window.addEventListener('storage', (event) => {
   }
 });
 
-// New function to handle the start button click
 function handleStartButtonClick(event, uuid) {
   event.stopPropagation(); // Prevent event bubbling
   event.preventDefault(); // Prevent default button behavior
   toggleStart(uuid); // Call the toggleStart function
 }
 
-// Function to update the displayed time for each task
 function updateDisplayedTimes() {
   const taskItems = document.querySelectorAll('#taskList li');
 
@@ -641,10 +629,9 @@ function formatDateTime(timestamp) {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-// Function to edit task title
 function editTaskTitle(uuid) {
   const task = findTaskByUUID(uuid);
-  if (!task) return; // Handle case where task is not found
+  if (!task) return;
 
   const taskItem = document.querySelector(`li[data-task-uuid="${uuid}"]`);
   const taskText = taskItem.querySelector('.task-text');
@@ -669,7 +656,6 @@ function editTaskTitle(uuid) {
   input.focus();
 }
 
-// Function to edit task cumulative time
 function editTaskTime(uuid) {
   const task = findTaskByUUID(uuid);
   if (!task) return;
