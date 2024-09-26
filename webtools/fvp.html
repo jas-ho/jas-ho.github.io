@@ -384,6 +384,50 @@ title: FVP Task Manager
   #toggle-shortcuts {
     cursor: pointer;
   }
+
+  .comparison-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--main-bg);
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    z-index: 10000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .comparison-dialog p {
+    margin-bottom: 10px;
+  }
+
+  .task-comparison {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .task-option {
+    flex: 1;
+    margin: 0 10px;
+    text-align: center;
+  }
+
+  .task-option button {
+    margin-top: 10px;
+    padding: 5px 10px;
+    cursor: pointer;
+    background-color: var(--btn-bg);
+    color: var(--btn-color);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+  }
+
+  .task-option button:hover {
+    background-color: var(--btn-hover-bg);
+    color: var(--btn-hover-color);
+  }
 </style>
 
 <div id="fvp-container">
@@ -410,6 +454,7 @@ title: FVP Task Manager
       <li><span class="key">d</span> delete (×)</li>
       <li><span class="key">f</span> toggle fullscreen (⛶)</li>
       <li><span class="key">s</span> start/stop (▶/⏸)</li>
+      <li><span class="key">p</span> initiate preselection</li> <!-- Added explanation for "p" key -->
     </ul>
   </div>
 
@@ -426,6 +471,7 @@ title: FVP Task Manager
     <button id="delete-all" class="btn-icon" title="Delete All Tasks"><i class="fas fa-trash"></i></button>
     <button id="toggle-completed-btn" class="btn-icon" title="Hide/Unhide Completed Tasks"><i class="fas fa-eye"></i></button>
     <button id="clear-completed-btn" class="btn-icon" title="Clear Completed Tasks"><i class="fas fa-broom"></i></button>
+    <button id="preselection-btn" class="btn-icon" title="Initiate Preselection"><i class="fas fa-magic"></i></button>
     <input type="file" id="import-file" style="display: none;" accept=".json">
   </div>
 </div>
