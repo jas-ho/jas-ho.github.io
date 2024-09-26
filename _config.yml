@@ -245,3 +245,8 @@ plugins:
 
 include:
   - webtools
+
+# HTML Proofer settings
+htmlproofer:
+  url_ignore:
+    - 'http://markforster.squarespace.com/blog/2021/11/16/the-final-version-perfected-fvp-instructions-reposted.html'
