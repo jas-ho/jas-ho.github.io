@@ -80,6 +80,7 @@ function renderTasks() {
         <button class="mark-btn" onclick="toggleMark('${task.uuid}')" title="Mark">★</button>
         <button class="complete-btn" onclick="toggleComplete('${task.uuid}')" title="${task.completed ? 'Reopen' : 'Complete'}">✓</button>
         <button class="delete-btn" onclick="deleteTask('${task.uuid}')" title="Delete">×</button>
+        <button class="defer-btn" onclick="toggleDeferred('${task.uuid}')" title="Defer">⏳</button>
       </div>
     `;
     li.setAttribute('tabindex', '0');
@@ -89,6 +90,9 @@ function renderTasks() {
     if (task.lastStartedTime !== null) li.classList.add('running');
     if (task === lastMarkedTask) li.classList.add('last-marked'); // Highlight the last marked task
     if (task.uuid === focusedUUID) li.classList.add('focused');
+    if (task.deferred) {
+      li.style.opacity = '0.5'; // Directly set opacity
+    }
     taskList.appendChild(li);
   });
 
@@ -111,7 +115,8 @@ function addTask(event) {
       lastStartedTime: null,
       startTime: null,
       endTime: null,
-      parentUUID: null
+      parentUUID: null,
+      deferred: false // Add deferred property
     };
     tasks.push(newTask);
     input.value = '';
@@ -244,6 +249,16 @@ function shelveTask(uuid) {
     saveTasksToLocalStorage(tasks);
     renderTasks();
   }
+}
+
+function toggleDeferred(uuid) {
+  const task = findTaskByUUID(uuid);
+  if (!task) return;
+  task.deferred = !task.deferred;
+  saveTasksToLocalStorage(tasks);
+  renderTasks();
+  logInteraction('toggleDeferred', uuid);
+  console.log('deferral status:', task.deferred);
 }
 
 function closeDialog(dialog) {
@@ -480,6 +495,12 @@ document.addEventListener('keydown', function(e) {
         case 'p':
           initiatePreselection();
           e.preventDefault();
+          break;
+        case '0': // Check for the "0" key
+          if (focusedUUID) {
+            toggleDeferred(focusedUUID);
+            logInteraction('toggleDeferred', focusedUUID);
+          }
           break;
       }
     }
@@ -731,7 +752,7 @@ function getCurrentBenchmarkTask() {
 // Function to get the next uncompleted task after the given task
 function getNextUncompletedTask(task) {
   const startIndex = tasks.indexOf(task) + 1;
-  const nextUncompletedTask = tasks.slice(startIndex).find(t => !t.completed);
+  const nextUncompletedTask = tasks.slice(startIndex).find(t => !t.completed && !t.deferred);
   // console.log('Next Uncompleted Task:', nextUncompletedTask);
   return nextUncompletedTask;
 }
