@@ -804,6 +804,12 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
       document.getElementById('choose-benchmark').click();
     } else if (e.key === '2') {
       document.getElementById('choose-next').click();
+    } else if (e.key === 'Escape') {
+      const dialog = document.querySelector('.comparison-dialog');
+      if (dialog) {
+        closeDialog(dialog);
+        finalizePreselection();
+      }
     }
   });
 
