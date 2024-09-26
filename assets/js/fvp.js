@@ -713,7 +713,7 @@ function getNextUncompletedTask(task) {
 
 // Function to initiate the preselection process
 function initiatePreselection(lastConsideredTask = null) {
-  console.log('Initiating Preselection');
+  console.log('Initiating Preselection with lastConsideredTask:', lastConsideredTask);
 
   const previousBenchmarkTask = getPreviousBenchmarkTask();
   console.log('Previous Benchmark Task:', previousBenchmarkTask);
