@@ -185,12 +185,14 @@ function promptForReflection(uuid) {
     document.getElementById('complete-task-btn').addEventListener('click', () => {
       saveReflection(uuid, document.getElementById('reflection-input').value);
       closeDialog(dialog);
+      initiatePreselection(); // Auto-trigger preselection
     });
 
     document.getElementById('shelve-task-btn').addEventListener('click', () => {
       saveReflection(uuid, document.getElementById('reflection-input').value);
       shelveTask(uuid);
       closeDialog(dialog);
+      initiatePreselection(); // Auto-trigger preselection
     });
 
     document.getElementById('cancel-btn').addEventListener('click', () => {
