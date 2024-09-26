@@ -783,35 +783,38 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
     dialog.style.width = `${taskListWidth}px`;
   }
 
-  // Add event listeners for the buttons
-  document.getElementById('choose-benchmark').addEventListener('click', () => {
+  function handleChooseBenchmark() {
     closeDialog(dialog);
-    // Continue with the next uncompleted task after the current benchmark task
     initiatePreselection(nextConsideredTask);
-  });
+    nextConsideredTask = null; // Clear the nextConsideredTask to prevent runaway selection
+  }
 
-  document.getElementById('choose-next').addEventListener('click', () => {
+  function handleChooseNext() {
     if (!nextConsideredTask.marked) {
       toggleMark(nextConsideredTask.uuid);
     }
     closeDialog(dialog);
     initiatePreselection(nextConsideredTask);
-  });
+    nextConsideredTask = null; // Clear the nextConsideredTask to prevent runaway selection
+  }
 
+  function handleChooseCancel() {
+    closeDialog(dialog);
+    finalizePreselection();
+  }
   // Add keyboard shortcuts for task selection
   document.addEventListener('keydown', function(e) {
     if (e.key === '1') {
-      document.getElementById('choose-benchmark').click();
+      handleChooseBenchmark();
     } else if (e.key === '2') {
-      document.getElementById('choose-next').click();
+      handleChooseNext();
     } else if (e.key === 'Escape') {
-      const dialog = document.querySelector('.comparison-dialog');
-      if (dialog) {
-        closeDialog(dialog);
-        finalizePreselection();
-      }
+      handleChooseCancel();
     }
   });
+
+  document.getElementById('choose-benchmark').addEventListener('click', handleChooseBenchmark);
+  document.getElementById('choose-next').addEventListener('click', handleChooseNext);
 
   console.log('Comparing Tasks:', { benchmarkTask, nextConsideredTask });
 }
