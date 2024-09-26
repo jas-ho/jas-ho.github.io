@@ -764,17 +764,24 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
   dialog.innerHTML = `
     <p>Which task do you prefer to do next?</p>
     <div class="task-comparison">
-      <div class="task-option" id="benchmark-task">
-        <p>${benchmarkTask ? benchmarkTask.text : 'No benchmark task'}</p>
-        <button id="choose-benchmark">Choose this task</button>
-      </div>
-      <div class="task-option" id="next-considered-task">
-        <p>${nextConsideredTask.text}</p>
-        <button id="choose-next">Choose this task</button>
-      </div>
+      <button class="task-option" id="choose-benchmark">
+        <span>${benchmarkTask ? benchmarkTask.text : 'No benchmark task'}</span>
+        <span class="key">1</span> <!-- Visual indication for keyboard shortcut -->
+      </button>
+      <button class="task-option" id="choose-next">
+        <span>${nextConsideredTask.text}</span>
+        <span class="key">2</span> <!-- Visual indication for keyboard shortcut -->
+      </button>
     </div>
   `;
   document.body.appendChild(dialog);
+
+  // Set the width of the comparison dialog to match the task list
+  const taskList = document.getElementById('taskList');
+  if (taskList) {
+    const taskListWidth = taskList.offsetWidth;
+    dialog.style.width = `${taskListWidth}px`;
+  }
 
   // Add event listeners for the buttons
   document.getElementById('choose-benchmark').addEventListener('click', () => {
@@ -789,6 +796,15 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
     }
     closeDialog(dialog);
     initiatePreselection(nextConsideredTask);
+  });
+
+  // Add keyboard shortcuts for task selection
+  document.addEventListener('keydown', function(e) {
+    if (e.key === '1') {
+      document.getElementById('choose-benchmark').click();
+    } else if (e.key === '2') {
+      document.getElementById('choose-next').click();
+    }
   });
 
   console.log('Comparing Tasks:', { benchmarkTask, nextConsideredTask });
