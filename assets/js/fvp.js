@@ -359,6 +359,10 @@ function toggleDeferred(uuid) {
   if (!task) return;
   setFocus(uuid);
   task.deferred = !task.deferred;
+  if (task.deferred) {
+    // deferring a task should unmark it
+    task.marked = false;
+  }
   saveTasksToLocalStorage(tasks);
   renderTasks();
   logInteraction('toggleDeferred', uuid);
