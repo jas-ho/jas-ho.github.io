@@ -484,8 +484,9 @@ title: FVP Task Manager
     <button id="export-btn" class="btn-icon" title="Export Tasks"><i data-feather="download"></i></button>
     <button id="import-btn" class="btn-icon" title="Import Tasks"><i data-feather="upload"></i></button>
     <button id="delete-all" class="btn-icon" title="Delete All Tasks"><i data-feather="trash-2"></i></button>
-    <button id="toggle-completed-btn" class="btn-icon" title="Hide Completed Tasks"><i data-feather="eye"></i></button>
-    <button id="clear-completed-btn" class="btn-icon" title="Clear Completed Tasks"><i data-feather="wind"></i></button>
+    <button id="toggle-completed-btn" class="btn-icon" title="Hide Completed Tasks" data-toggle-completed>
+      <i data-feather="eye" data-toggle-completed-icon></i>
+    </button>    <button id="clear-completed-btn" class="btn-icon" title="Clear Completed Tasks"><i data-feather="wind"></i></button>
     <button id="preselection-btn" class="btn-icon" title="Initiate Preselection"><i data-feather="filter"></i></button>
     <input type="file" id="import-file" style="display: none;" accept=".json">
   </div>

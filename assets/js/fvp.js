@@ -48,7 +48,38 @@ let showCompletedTasks = true;
 
 function toggleCompletedTasks() {
   showCompletedTasks = !showCompletedTasks;
+  updateToggleCompletedButton();
   renderTasks();
+}
+
+function updateToggleCompletedButton() {
+  console.log('Updating toggle completed button');
+  console.log('Show completed tasks:', showCompletedTasks);
+  const toggleCompletedBtn = document.querySelector('[data-toggle-completed]');
+  if (!toggleCompletedBtn) {
+    console.error('Toggle completed button not found');
+    return;
+  }
+
+  let icon = document.querySelector('[data-toggle-completed-icon]');
+
+  if (!icon) {
+    console.error('Icon not found in toggle completed button');
+    return;
+  }
+
+  if (showCompletedTasks) {
+    icon.setAttribute('data-feather', 'eye-off');
+    toggleCompletedBtn.title = 'Hide Completed Tasks';
+  } else {
+    icon.setAttribute('data-feather', 'eye');
+    toggleCompletedBtn.title = 'Show Completed Tasks';
+  }
+
+  console.log('Updated icon:', icon);
+  console.log('Updated button title:', toggleCompletedBtn.title);
+
+  feather.replace();
 }
 
 function clearCompletedTasks() {
@@ -111,6 +142,7 @@ function renderTasks() {
     focusInputBox();
   }
   updateProgressBar();
+  updateToggleCompletedButton();
 }
 
 function addTask(event) {
@@ -587,6 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
   startUpdatingTime(); // Start updating the time display
   document.getElementById('taskList').focus();
   feather.replace();
+  updateToggleCompletedButton();
 });
 
 // Listen for changes to LocalStorage
