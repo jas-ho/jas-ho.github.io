@@ -553,10 +553,6 @@ function toggleFullscreen(forceState) {
   fullscreenToggle.innerHTML = `<i data-feather="${isFullscreen ? 'minimize' : 'maximize'}"></i>`;
   fullscreenToggle.title = isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen';
 
-  // Re-attach the event listener (not strictly necessary in this case)
-  fullscreenToggle.removeEventListener('click', toggleFullscreen);
-  fullscreenToggle.addEventListener('click', toggleFullscreen);
-
   // Hide/show the sidebar and other page elements
   const sidebar = document.querySelector('.sidebar');
   const content = document.querySelector('.content');
@@ -571,7 +567,12 @@ function toggleFullscreen(forceState) {
   feather.replace();
 }
 
-document.getElementById('fullscreen-toggle').addEventListener('click', toggleFullscreen);
+// Remove the existing event listener
+document.getElementById('fullscreen-toggle').removeEventListener('click', toggleFullscreen);
+
+// Add a new event listener that doesn't pass any arguments
+document.getElementById('fullscreen-toggle').addEventListener('click', () => toggleFullscreen());
+
 
 function focusFirstTask() {
   if (tasks.length > 0) {
