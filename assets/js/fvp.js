@@ -130,7 +130,10 @@ function renderTasks() {
     if (task.completed) li.classList.add('completed');
     if (task.lastStartedTime !== null) li.classList.add('running');
     if (task === lastMarkedTask) li.classList.add('last-marked'); // Highlight the last marked task
-    if (task.uuid === focusedUUID) li.classList.add('focused');
+    if (task.uuid === focusedUUID) {
+      li.classList.add('focused');
+      setTimeout(() => li.focus(), 0); // Ensure focus is set after rendering
+    }
     if (task.deferred) {
       li.style.opacity = '0.5'; // Directly set opacity
     }
@@ -297,6 +300,7 @@ function shelveTask(uuid) {
 function toggleDeferred(uuid) {
   const task = findTaskByUUID(uuid);
   if (!task) return;
+  setFocus(uuid);
   task.deferred = !task.deferred;
   saveTasksToLocalStorage(tasks);
   renderTasks();
@@ -471,7 +475,7 @@ document.addEventListener('keydown', function(e) {
     return;
   }
 
-  if (e.key === 'f') {
+  if (e.key === 'f') { // Toggle Fullscreen
     toggleFullscreen();
     e.preventDefault();
   } else if (e.key === 'h') { // Hide / Show Completed
@@ -541,7 +545,8 @@ document.addEventListener('keydown', function(e) {
         case '0': // Defer / Undefer
           if (focusedUUID) {
             toggleDeferred(focusedUUID);
-            logInteraction('toggleDeferred', focusedUUID);
+            logInteraction('defer', focusedUUID);
+            e.preventDefault();
           }
           break;
       }
