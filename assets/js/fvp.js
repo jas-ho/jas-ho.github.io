@@ -474,7 +474,19 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'f') {
     toggleFullscreen();
     e.preventDefault();
-  } else if (e.key === 'Escape') {
+  } else if (e.key === 'h') { // Hide / Show Completed
+    toggleCompletedTasks();
+    console.log('toggleCompletedTasks');
+    e.preventDefault();
+  } else if (e.key === 'p') { // Initiate Preselection
+    initiatePreselection();
+    console.log('initiatePreselection');
+    e.preventDefault();
+  } else if (e.key === 'n') { // Focus Input Box to add new task
+    focusInputBox();
+    console.log('focusInput');
+    e.preventDefault();
+  } else if (e.key === 'Escape') { // Move Focus to First Task
     focusFirstTask();
     e.preventDefault();
   } else if (document.activeElement === taskList || document.activeElement.closest('#taskList')) {
@@ -500,24 +512,19 @@ document.addEventListener('keydown', function(e) {
       e.preventDefault();
     } else {
       switch (e.key) {
-        case 'm':
+        case 'm': // Mark
           if (focusedUUID) {
             toggleMark(focusedUUID);
             logInteraction('mark', focusedUUID);
           }
           break;
-        case 'c':
+        case 'c': // Complete
           if (focusedUUID) {
             toggleComplete(focusedUUID);
             logInteraction('complete', focusedUUID);
           }
           break;
-        case 'n':
-          focusInputBox();
-          logInteraction('focusInput', focusedUUID);
-          e.preventDefault();
-          break;
-        case 'd':
+        case 'd': // Delete
           if (focusedUUID) {
             deleteTask(focusedUUID);
             logInteraction('delete', focusedUUID);
@@ -525,21 +532,13 @@ document.addEventListener('keydown', function(e) {
             e.preventDefault();
           }
           break;
-        case 's':
+        case 's': // Start / Stop
           if (focusedUUID) {
             toggleStart(focusedUUID);
             logInteraction('start', focusedUUID);
           }
           break;
-        case 'h':
-          toggleCompletedTasks();
-          logInteraction('toggleCompletedTasks', focusedUUID);
-          break;
-        case 'p':
-          initiatePreselection();
-          e.preventDefault();
-          break;
-        case '0': // Check for the "0" key
+        case '0': // Defer / Undefer
           if (focusedUUID) {
             toggleDeferred(focusedUUID);
             logInteraction('toggleDeferred', focusedUUID);
