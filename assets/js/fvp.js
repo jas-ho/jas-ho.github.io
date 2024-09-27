@@ -251,25 +251,9 @@ function promptForReflection(uuid, onComplete) {
     `;
 
     setupDialog(dialog);
+    styleDialog(dialog);
 
-    // Add inline styles for the dialog and input
-    dialog.style.cssText = `
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: var(--main-bg, #fff);
-      color: var(--text-color, #000);
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      border: 1px solid var(--border-color, #ccc);
-      z-index: 1001;
-      width: 90%;
-      max-width: 800px;
-    `;
-
-    const input = document.getElementById('reflection-input');
+    const input = dialog.querySelector('#reflection-input');
     input.style.cssText = `
       width: 100%;
       padding: 8px;
@@ -387,6 +371,25 @@ function setupDialog(dialog) {
   container.appendChild(dialog);
   dialog.dataset.container = isFullscreenMode ? 'fvp-container' : 'body';
   return container;
+}
+
+function styleDialog(dialog) {
+  dialog.style.cssText = `
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--main-bg, #fff);
+    color: var(--text-color, #000);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color, #ccc);
+    z-index: 1001;
+    width: 90%;
+    max-width: 800px;
+  `;
+  return dialog;
 }
 
 function closeDialog(dialog) {
@@ -1072,68 +1075,19 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
     </div>
   `;
 
-  const container = setupDialog(dialog);
-
-  // Add inline styles for the dialog
-  dialog.style.cssText = `
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--main-bg, #fff);
-    color: var(--text-color, #000);
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--border-color, #ccc);
-    z-index: 1001;
-    width: 90%;
-    max-width: 800px;
-  `;
+  setupDialog(dialog);
+  styleDialog(dialog);
 
   // Add styles for the task comparison elements
   const style = document.createElement('style');
   style.textContent = `
-    .task-comparison {
-      width: 100%;
-    }
-    .task-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 15px;
-      width: 100%;
-    }
-    .task-option {
-      display: flex;
-      align-items: center;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 5px;
-      width: 100%;
-    }
-    .task-option i {
-      width: 18px;
-      height: 18px;
-      margin-right: 10px;
-    }
-    .task-text {
-      flex-grow: 1;
-      text-align: left;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .defer-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 5px;
-    }
-    .defer-btn i {
-      width: 18px;
-      height: 18px;
-    }
+    .task-comparison { width: 100%; }
+    .task-item { display: flex; align-items: center; margin-bottom: 15px; width: 100%; }
+    .task-option { display: flex; align-items: center; background: none; border: none; cursor: pointer; padding: 5px; width: 100%; }
+    .task-option i { width: 18px; height: 18px; margin-right: 10px; }
+    .task-text { flex-grow: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .defer-btn { background: none; border: none; cursor: pointer; padding: 5px; }
+    .defer-btn i { width: 18px; height: 18px; }
   `;
   dialog.appendChild(style);
 
