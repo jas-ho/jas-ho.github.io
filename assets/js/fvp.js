@@ -249,10 +249,12 @@ function promptForReflection(uuid, onComplete) {
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: white;
+      background: var(--main-bg, #fff);
+      color: var(--text-color, #000);
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border-color, #ccc);
       z-index: 1000;
       width: 90%;
       max-width: 800px;
@@ -263,9 +265,11 @@ function promptForReflection(uuid, onComplete) {
       width: 100%;
       padding: 8px;
       margin: 10px 0;
-      border: 1px solid #ccc;
+      border: 1px solid var(--border-color, #ccc);
       border-radius: 4px;
       font-size: 16px;
+      background-color: var(--main-bg, #fff);
+      color: var(--text-color, #000);
     `;
 
     function handleComplete() {
