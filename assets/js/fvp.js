@@ -223,6 +223,7 @@ function reopenTask(uuid) {
 }
 
 function promptForReflection(uuid, onComplete) {
+  showOverlay(); // Add this line
   const task = findTaskByUUID(uuid);
   if (task) {
     const elapsedTime = Math.ceil(task.cumulativeTimeInSeconds / 60);
@@ -377,6 +378,7 @@ function closeDialog(dialog) {
   if (document.body.contains(dialog)) {
     document.body.removeChild(dialog);
   }
+  hideOverlay(); // Add this line
 }
 
 function deleteTask(uuid) {
@@ -799,6 +801,28 @@ function startUpdatingTime() {
   }, 1000); // Update every second
 }
 
+function showOverlay() {
+  const overlay = document.createElement('div');
+  overlay.id = 'fvp-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--main-bg);
+    z-index: 999;
+  `;
+  document.body.appendChild(overlay);
+}
+
+function hideOverlay() {
+  const overlay = document.getElementById('fvp-overlay');
+  if (overlay) {
+    overlay.remove();
+  }
+}
+
 // Function to format date and time as YYYY-MM-DD HH:mm:ss
 function formatDateTime(timestamp) {
   if (!timestamp) return null;
@@ -966,6 +990,7 @@ function initiatePreselection(lastConsideredTask = null) {
 
 // Function to compare two tasks and update marked status if necessary
 function compareTasks(benchmarkTask, nextConsideredTask) {
+  showOverlay(); // Add this line
   const dialog = document.createElement('div');
   dialog.classList.add('comparison-dialog');
   dialog.style.maxWidth = '500px';
@@ -1015,6 +1040,7 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
 
   function handleChooseBenchmark() {
     closeDialog(dialog);
+    hideOverlay(); // Add this line
     initiatePreselection(nextConsideredTask);
     nextConsideredTask = null; // Clear the nextConsideredTask to prevent runaway selection
   }
@@ -1024,6 +1050,7 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
       toggleMark(nextConsideredTask.uuid);
     }
     closeDialog(dialog);
+    hideOverlay(); // Add this line
     initiatePreselection(nextConsideredTask);
     nextConsideredTask = null; // Clear the nextConsideredTask to prevent runaway selection
   }
@@ -1040,6 +1067,7 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
 
   function handleChooseCancel() {
     closeDialog(dialog);
+    hideOverlay(); // Add this line
     finalizePreselection();
   }
 
@@ -1076,6 +1104,7 @@ function closeDialog(dialog) {
   if (document.body.contains(dialog)) {
     document.body.removeChild(dialog);
   }
+  hideOverlay(); // Add this line
 }
 
 document.getElementById('preselection-btn').addEventListener('click', function() {
