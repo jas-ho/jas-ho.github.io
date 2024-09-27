@@ -12,8 +12,18 @@ title: FVP Task Manager
     text-decoration: line-through;
     opacity: 0.5; /* Added transparency */
   }
-  .last-marked { font-size: 1.2em; padding: 10px; border: 2px solid var(--link-color); border-radius: 5px; }
-  .focused { background-color: var(--sidebar-bg); outline: 2px solid var(--link-color); }
+  .last-marked {
+    font-size: 1.2em;
+    padding: 8px;
+    border-left: 6px solid var(--link-color);
+    background-color: rgba(var(--link-color-rgb), 0.1);
+  }
+  .focused {
+    background-color: var(--sidebar-bg);
+    box-shadow: 0 0 0 2px var(--link-color);
+    transform: translateX(4px);
+    transition: transform 0.2s ease-in-out;
+  }
   .task-text { flex-grow: 1; }
   .controls { display: flex; gap: 10px; }
   #task-controls {
