@@ -74,21 +74,6 @@ title: FVP Task Manager
     padding: 20px;
     overflow-y: auto;
   }
-  #fullscreen-toggle {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 10000;
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 1.2em;
-    cursor: pointer;
-    padding: 5px;
-  }
-  #fullscreen-toggle:hover {
-    color: var(--link-color);
-  }
   #fvp-container h1 {
     display: none;
     margin-top: 0;
@@ -456,9 +441,6 @@ title: FVP Task Manager
 </style>
 
 <div id="fvp-container">
-  <button id="fullscreen-toggle" class="btn-icon" title="Enter Fullscreen">⛶</button>
-
-  <!-- Progress bar and cumulative time display -->
   <div id="progress-container">
     <div id="progress-bar"></div>
   </div>
@@ -487,16 +469,18 @@ title: FVP Task Manager
   <div id="task-controls">
     <form id="newTaskForm" onsubmit="addTask(event)">
       <input type="text" id="taskInput" class="input-color" placeholder="Enter a new task" required>
-      <button type="submit" id="add-task-btn" class="btn-icon" title="Add Task"><i class="fas fa-plus"></i></button>
+      <button type="submit" id="add-task-btn" class="btn-icon" title="Add Task"><i data-feather="plus"></i></button>
     </form>
   </div>
   <div id="task-actions">
     <button id="export-btn" class="btn-icon" title="Export Tasks"><i data-feather="download"></i></button>
     <button id="import-btn" class="btn-icon" title="Import Tasks"><i data-feather="upload"></i></button>
     <button id="delete-all" class="btn-icon" title="Delete All Tasks"><i data-feather="trash-2"></i></button>
+    <button id="fullscreen-toggle" class="btn-icon" title="Toggle Fullscreen"><i data-feather="maximize"></i></button>
     <button id="toggle-completed-btn" class="btn-icon" title="Hide Completed Tasks" data-toggle-completed>
       <i data-feather="eye" data-toggle-completed-icon></i>
-    </button>    <button id="clear-completed-btn" class="btn-icon" title="Clear Completed Tasks"><i data-feather="wind"></i></button>
+    </button>
+    <button id="clear-completed-btn" class="btn-icon" title="Clear Completed Tasks"><i data-feather="wind"></i></button>
     <button id="preselection-btn" class="btn-icon" title="Initiate Preselection"><i data-feather="filter"></i></button>
     <input type="file" id="import-file" style="display: none;" accept=".json">
   </div>
