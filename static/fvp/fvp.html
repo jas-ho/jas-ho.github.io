@@ -347,7 +347,11 @@ title: FVP Task Manager
   .btn-icon:hover::after {
     opacity: 1;
   }
-
+  .btn-icon i, .controls button i {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+}
   /* Simplify repeated styles */
   .text-color { color: var(--text-color); }
   .text-muted { color: var(--text-muted); }
@@ -477,14 +481,15 @@ title: FVP Task Manager
     </form>
   </div>
   <div id="task-actions">
-    <button id="export-btn" class="btn-icon" title="Export Tasks"><i class="fas fa-download"></i></button>
-    <button id="import-btn" class="btn-icon" title="Import Tasks"><i class="fas fa-upload"></i></button>
-    <button id="delete-all" class="btn-icon" title="Delete All Tasks"><i class="fas fa-trash"></i></button>
-    <button id="toggle-completed-btn" class="btn-icon" title="Hide/Unhide Completed Tasks"><i class="fas fa-eye"></i></button>
-    <button id="clear-completed-btn" class="btn-icon" title="Clear Completed Tasks"><i class="fas fa-broom"></i></button>
-    <button id="preselection-btn" class="btn-icon" title="Initiate Preselection"><i class="fas fa-magic"></i></button>
+    <button id="export-btn" class="btn-icon" title="Export Tasks"><i data-feather="download"></i></button>
+    <button id="import-btn" class="btn-icon" title="Import Tasks"><i data-feather="upload"></i></button>
+    <button id="delete-all" class="btn-icon" title="Delete All Tasks"><i data-feather="trash-2"></i></button>
+    <button id="toggle-completed-btn" class="btn-icon" title="Hide Completed Tasks"><i data-feather="eye"></i></button>
+    <button id="clear-completed-btn" class="btn-icon" title="Clear Completed Tasks"><i data-feather="wind"></i></button>
+    <button id="preselection-btn" class="btn-icon" title="Initiate Preselection"><i data-feather="filter"></i></button>
     <input type="file" id="import-file" style="display: none;" accept=".json">
   </div>
 </div>
 
 <script src="{{ '/assets/js/fvp.js' | relative_url }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>

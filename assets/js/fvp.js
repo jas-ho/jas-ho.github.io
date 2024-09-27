@@ -73,16 +73,26 @@ function renderTasks() {
     li.setAttribute('data-task-uuid', task.uuid); // Use UUID
 
     li.innerHTML = `
-      <span class="task-text" ondblclick="editTaskTitle('${task.uuid}')">${task.text}</span>
-      <span class="stopwatch" ondblclick="editTaskTime('${task.uuid}')">${formatTime(getDisplayedTime(task))}</span>
-      <div class="controls">
-        <button class="start-btn" onclick="handleStartButtonClick(event, '${task.uuid}')" title="Start">${task.lastStartedTime !== null ? '⏸' : '▶'}</button>
-        <button class="mark-btn" onclick="toggleMark('${task.uuid}')" title="Mark">★</button>
-        <button class="complete-btn" onclick="toggleComplete('${task.uuid}')" title="${task.completed ? 'Reopen' : 'Complete'}">✓</button>
-        <button class="delete-btn" onclick="deleteTask('${task.uuid}')" title="Delete">×</button>
-        <button class="defer-btn" onclick="toggleDeferred('${task.uuid}')" title="Defer">⏳</button>
-      </div>
-    `;
+    <span class="task-text" ondblclick="editTaskTitle('${task.uuid}')">${task.text}</span>
+    <span class="stopwatch" ondblclick="editTaskTime('${task.uuid}')">${formatTime(getDisplayedTime(task))}</span>
+    <div class="controls">
+      <button class="start-btn" onclick="handleStartButtonClick(event, '${task.uuid}')" title="${task.lastStartedTime !== null ? 'Pause' : 'Start'}">
+        <i data-feather="${task.lastStartedTime !== null ? 'pause' : 'play'}"></i>
+      </button>
+      <button class="mark-btn" onclick="toggleMark('${task.uuid}')" title="${task.marked ? 'Unmark' : 'Mark'}">
+        <i data-feather="star"></i>
+      </button>
+      <button class="complete-btn" onclick="toggleComplete('${task.uuid}')" title="${task.completed ? 'Reopen' : 'Complete'}">
+        <i data-feather="check"></i>
+      </button>
+      <button class="delete-btn" onclick="deleteTask('${task.uuid}')" title="Delete">
+        <i data-feather="x"></i>
+      </button>
+      <button class="defer-btn" onclick="toggleDeferred('${task.uuid}')" title="${task.deferred ? 'Undefer' : 'Defer'}">
+      <i data-feather="${task.deferred ? 'chevron-left' : 'chevron-right'}"></i>
+      </button>
+    </div>
+  `;
     li.setAttribute('tabindex', '0');
     li.onclick = () => setFocus(task.uuid);
     if (task.marked) li.classList.add('marked');
@@ -94,6 +104,7 @@ function renderTasks() {
       li.style.opacity = '0.5'; // Directly set opacity
     }
     taskList.appendChild(li);
+    feather.replace();
   });
 
   if (tasks.length === 0) {
@@ -575,6 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderTasks();
   startUpdatingTime(); // Start updating the time display
   document.getElementById('taskList').focus();
+  feather.replace();
 });
 
 // Listen for changes to LocalStorage
