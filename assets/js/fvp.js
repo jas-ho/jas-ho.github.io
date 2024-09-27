@@ -534,22 +534,35 @@ function updateFocus() {
 // Ensure the taskList can receive focus
 document.getElementById('taskList').setAttribute('tabindex', '0');
 
-function toggleFullscreen() {
+function toggleFullscreen(forceState) {
   const container = document.getElementById('fvp-container');
   const fullscreenToggle = document.getElementById('fullscreen-toggle');
-  container.classList.toggle('fullscreen');
-  fullscreenToggle.textContent = container.classList.contains('fullscreen') ? '⮌' : '⛶';
-  fullscreenToggle.title = container.classList.contains('fullscreen') ? 'Exit Fullscreen' : 'Enter Fullscreen';
+
+  // If forceState is provided, use it; otherwise, toggle the current state
+  const isFullscreen = forceState !== undefined ? forceState : !container.classList.contains('fullscreen');
+
+  container.classList.toggle('fullscreen', isFullscreen);
+
+  // Update the icon and title
+  fullscreenToggle.innerHTML = `<i data-feather="${isFullscreen ? 'minimize' : 'maximize'}"></i>`;
+  fullscreenToggle.title = isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen';
+
+  // Re-attach the event listener (not strictly necessary in this case)
+  fullscreenToggle.removeEventListener('click', toggleFullscreen);
+  fullscreenToggle.addEventListener('click', toggleFullscreen);
 
   // Hide/show the sidebar and other page elements
   const sidebar = document.querySelector('.sidebar');
   const content = document.querySelector('.content');
-  if (sidebar) sidebar.style.display = container.classList.contains('fullscreen') ? 'none' : '';
-  if (content) content.style.width = container.classList.contains('fullscreen') ? '100%' : '';
+  if (sidebar) sidebar.style.display = isFullscreen ? 'none' : '';
+  if (content) content.style.width = isFullscreen ? '100%' : '';
 
   // Show/hide the inner title
   const innerTitle = container.querySelector('h1');
-  if (innerTitle) innerTitle.style.display = container.classList.contains('fullscreen') ? 'block' : 'none';
+  if (innerTitle) innerTitle.style.display = isFullscreen ? 'block' : 'none';
+
+  // Replace the Feather icon
+  feather.replace();
 }
 
 document.getElementById('fullscreen-toggle').addEventListener('click', toggleFullscreen);
@@ -739,6 +752,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('taskList').focus();
   feather.replace();
   updateToggleCompletedButton();
+  toggleFullscreen(true); // Set fullscreen mode by default
 });
 
 // Listen for changes to LocalStorage
