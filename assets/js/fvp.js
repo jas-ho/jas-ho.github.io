@@ -400,8 +400,9 @@ function startTask(task) {
     }
   });
 
-  task.lastStartedTime = Date.now();
   if (task.startTime === null) {
+    // only start the task if it hasn't been started yet
+    task.lastStartedTime = Date.now();
     task.startTime = task.lastStartedTime;
     console.log('started task', task.uuid);
   }
