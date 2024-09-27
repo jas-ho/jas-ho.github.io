@@ -36,15 +36,17 @@ title: FVP Task Manager
   #newTaskForm {
     display: flex;
     flex-grow: 1;
+    margin: 0;
+    padding: 0;
   }
   #taskInput {
     width: 100%;
-    padding: 5px; /* Decreased padding for a sensible height */
+    padding: 5px;
     border: 2px solid var(--link-color);
     border-radius: 5px;
-    font-size: 1em; /* Adjusted font size */
+    font-size: 1em;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    height: 2.5em; /* Match the height of the focus box */
+    height: 2.5em;
   }
   #taskInput:focus {
     outline: none;
@@ -117,12 +119,12 @@ title: FVP Task Manager
     font-weight: bold;
     color: var(--link-color);
   }
-  #add-task-btn, #export-btn, #import-btn, #delete-all, #toggle-completed-btn, #clear-completed-btn {
+  #export-btn, #import-btn, #delete-all, #toggle-completed-btn, #clear-completed-btn {
     composes: btn-icon;
     padding: 5px 10px;
     font-size: 1.5em; /* Increase font size for icons */
   }
-  #add-task-btn:hover, #delete-all:hover, #export-btn:hover, #import-btn:hover, #toggle-completed-btn:hover, #clear-completed-btn:hover {
+  #delete-all:hover, #export-btn:hover, #import-btn:hover, #toggle-completed-btn:hover, #clear-completed-btn:hover {
     color: var(--link-hover-color);
     background-color: rgba(255, 255, 255, 0.05); /* Slightly muted background on hover */
   }
@@ -437,7 +439,6 @@ title: FVP Task Manager
     border-color: var(--link-hover-color); /* Change border color on hover */
   }
 
-  /* ... existing styles ... */
 </style>
 
 <div id="fvp-container">
@@ -469,7 +470,6 @@ title: FVP Task Manager
   <div id="task-controls">
     <form id="newTaskForm" onsubmit="addTask(event)">
       <input type="text" id="taskInput" class="input-color" placeholder="Enter a new task" required>
-      <button type="submit" id="add-task-btn" class="btn-icon" title="Add Task"><i data-feather="plus"></i></button>
     </form>
   </div>
   <div id="task-actions">
