@@ -393,6 +393,7 @@ function deleteTask(uuid) {
 let isToggling = false;
 
 function startTask(task) {
+  console.log('Starting task:', task);
   // Stop all other running tasks
   tasks.forEach(t => {
     if (t.lastStartedTime !== null && t.uuid !== task.uuid) {
@@ -410,6 +411,7 @@ function startTask(task) {
   // Save and render after starting the task
   saveTasksToLocalStorage(tasks);
   renderTasks();
+  console.log('Task started:', task);
 }
 
 function stopTask(task) {
@@ -446,10 +448,38 @@ function finalizePreselection() {
   const currentBenchmarkTask = getCurrentBenchmarkTask();
   if (currentBenchmarkTask) {
     console.log('Top Priority Task:', currentBenchmarkTask);
-    startTask(currentBenchmarkTask); // Directly start the task
-    setTimeout(() => {
-      setFocus(currentBenchmarkTask.uuid); // Use setTimeout to ensure the task is rendered before focusing
-    }, 0);
+
+    // Ensure the task is marked
+    if (!currentBenchmarkTask.marked) {
+      toggleMark(currentBenchmarkTask.uuid);
+    }
+
+    // Use Promise to ensure operations are performed in order
+    Promise.resolve()
+      .then(() => {
+        // Start the task
+        return new Promise(resolve => {
+          startTask(currentBenchmarkTask);
+          resolve();
+        });
+      })
+      .then(() => {
+        // Set focus
+        setFocus(currentBenchmarkTask.uuid);
+      })
+      .then(() => {
+        // Render tasks to update the UI
+        renderTasks();
+      })
+      .then(() => {
+        // Ensure focus is set after rendering
+        setTimeout(() => {
+          setFocus(currentBenchmarkTask.uuid);
+        }, 50);
+      })
+      .catch(error => {
+        console.error('Error in finalizePreselection:', error);
+      });
   } else {
     console.log('No tasks to execute.');
   }
@@ -1043,21 +1073,6 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
 function closeDialog(dialog) {
   if (document.body.contains(dialog)) {
     document.body.removeChild(dialog);
-  }
-}
-
-// Function to finalize the preselection process; a placeholder for future functionality
-function finalizePreselection() {
-  console.log('Finalizing Preselection');
-  const currentBenchmarkTask = getCurrentBenchmarkTask();
-  if (currentBenchmarkTask) {
-    console.log('Top Priority Task:', currentBenchmarkTask);
-    startTask(currentBenchmarkTask); // Directly start the task
-    setTimeout(() => {
-      setFocus(currentBenchmarkTask.uuid); // Use setTimeout to ensure the task is rendered before focusing
-    }, 0);
-  } else {
-    console.log('No tasks to execute.');
   }
 }
 
