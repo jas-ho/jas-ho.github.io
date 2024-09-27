@@ -197,15 +197,18 @@ function toggleComplete(uuid) {
 
 function completeTask(uuid) {
   logInteraction('completeTask', uuid);
-  promptForReflection(uuid, () => {
-    const task = findTaskByUUID(uuid);
-    if (task) {
-      stopTask(task);
-      task.completed = true;
-      saveTasksToLocalStorage(tasks);
-      renderTasks();
-    }
-  });
+  // Use setTimeout to delay the prompt
+  setTimeout(() => {
+    promptForReflection(uuid, () => {
+      const task = findTaskByUUID(uuid);
+      if (task) {
+        stopTask(task);
+        task.completed = true;
+        saveTasksToLocalStorage(tasks);
+        renderTasks();
+      }
+    });
+  }, 0);
 }
 
 function reopenTask(uuid) {
@@ -222,44 +225,98 @@ function reopenTask(uuid) {
 function promptForReflection(uuid, onComplete) {
   const task = findTaskByUUID(uuid);
   if (task) {
-    const elapsedTime = Math.ceil(task.cumulativeTimeInSeconds / 60); // Convert to minutes and round up
+    const elapsedTime = Math.ceil(task.cumulativeTimeInSeconds / 60);
 
-    // Create a dialog for reflection and action buttons
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const modifierKey = isMac ? '⌘' : 'Ctrl';
+
     const dialog = document.createElement('div');
     dialog.classList.add('reflection-dialog');
     dialog.innerHTML = `
       <p>You worked on "${task.text}" for ${elapsedTime} minutes. How did it go?</p>
-      <textarea id="reflection-input" placeholder="Enter your reflection here..."></textarea>
+      <input type="text" id="reflection-input" placeholder="Enter your reflection here...">
       <div class="dialog-actions">
-        <button id="complete-task-btn">Complete task now</button>
-        <button id="shelve-task-btn">Shelve task for later</button>
-        <button id="cancel-btn">Cancel</button>
+        <button id="complete-task-btn">Complete task now (Enter)</button>
+        <button id="shelve-task-btn">Shelve task for later (${modifierKey}+Enter)</button>
+        <button id="cancel-btn">Cancel (Esc)</button>
       </div>
     `;
     document.body.appendChild(dialog);
 
-    // Add event listeners for the buttons
-    document.getElementById('complete-task-btn').addEventListener('click', () => {
-      saveReflection(uuid, document.getElementById('reflection-input').value);
-      closeDialog(dialog);
-      onComplete(); // Call the onComplete callback
-      initiatePreselection(); // Auto-trigger preselection
-    });
+    // Add inline styles for the dialog and input
+    dialog.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      width: 90%;
+      max-width: 800px;
+    `;
 
-    document.getElementById('shelve-task-btn').addEventListener('click', () => {
-      saveReflection(uuid, document.getElementById('reflection-input').value);
+    const input = document.getElementById('reflection-input');
+    input.style.cssText = `
+      width: 100%;
+      padding: 8px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    `;
+
+    function handleComplete() {
+      saveReflection(uuid, input.value);
+      closeDialog(dialog);
+      onComplete();
+      initiatePreselection();
+    }
+
+    function handleShelve() {
+      saveReflection(uuid, input.value);
       shelveTask(uuid);
       closeDialog(dialog);
-      onComplete(); // Call the onComplete callback
-      initiatePreselection(); // Auto-trigger preselection
-    });
+      onComplete();
+      initiatePreselection();
+    }
 
-    document.getElementById('cancel-btn').addEventListener('click', () => {
-      task.completed = false; // Revert task to incomplete status
+    function handleCancel() {
+      task.completed = false;
       saveTasksToLocalStorage(tasks);
       renderTasks();
       closeDialog(dialog);
+    }
+
+    document.getElementById('complete-task-btn').addEventListener('click', handleComplete);
+    document.getElementById('shelve-task-btn').addEventListener('click', handleShelve);
+    document.getElementById('cancel-btn').addEventListener('click', handleCancel);
+
+    function handleKeydown(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (e.ctrlKey || e.metaKey) {
+          handleShelve();
+        } else {
+          handleComplete();
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        handleCancel();
+      }
+    }
+
+    dialog.addEventListener('keydown', handleKeydown);
+
+    dialog.addEventListener('DOMNodeRemoved', () => {
+      dialog.removeEventListener('keydown', handleKeydown);
     });
+
+    // Clear the input and focus it
+    input.value = '';
+    input.focus();
   }
 }
 
