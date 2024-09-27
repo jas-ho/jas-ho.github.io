@@ -932,34 +932,54 @@ function initiatePreselection(lastConsideredTask = null) {
 
 // Function to compare two tasks and update marked status if necessary
 function compareTasks(benchmarkTask, nextConsideredTask) {
-  // Create a dialog for task comparison
   const dialog = document.createElement('div');
   dialog.classList.add('comparison-dialog');
+  dialog.style.maxWidth = '500px';
+  dialog.style.margin = '0 auto';
+  dialog.style.padding = '20px';
+  dialog.style.borderRadius = '8px';
+  dialog.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
   dialog.innerHTML = `
     <p>Which task do you prefer to do next?</p>
-    <div class="task-comparison">
-      <button class="task-option" id="choose-benchmark">
-        <span>${benchmarkTask ? benchmarkTask.text : 'No benchmark task'}</span>
-        <span class="key">1</span> <!-- Visual indication for keyboard shortcut -->
-      </button>
-      <button class="task-option" id="choose-next">
-        <span>${nextConsideredTask.text}</span>
-        <span class="key">2</span> <!-- Visual indication for keyboard shortcut -->
-      </button>
-      <button class="task-option" id="defer-next">
-        <span>Defer "${nextConsideredTask.text}"</span>
-        <span class="key">0</span> <!-- Visual indication for keyboard shortcut -->
-      </button>
+    <div class="task-comparison" style="width: 100%; max-width: 500px;">
+      <div class="task-item" style="display: flex; align-items: center; margin-bottom: 15px; width: 100%;">
+        <button class="task-option" id="choose-benchmark" title="Select Task" style="display: flex; align-items: center; background: none; border: none; cursor: pointer; padding: 5px; width: 100%;">
+          <i data-feather="play" style="width: 18px; height: 18px; margin-right: 10px;"></i>
+          <span class="task-text" style="flex-grow: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            ${benchmarkTask ? benchmarkTask.text : 'No benchmark task'}
+          </span>
+          <span style="margin-left: 10px;">1</span>
+        </button>
+        <button class="defer-btn" id="defer-benchmark" title="Defer" style="background: none; border: none; cursor: pointer; padding: 5px;">
+          <i data-feather="chevron-right" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+      <div class="task-item" style="display: flex; align-items: center; margin-bottom: 15px; width: 100%;">
+        <button class="task-option" id="choose-next" title="Select Task" style="display: flex; align-items: center; background: none; border: none; cursor: pointer; padding: 5px; width: 100%;">
+          <i data-feather="play" style="width: 18px; height: 18px; margin-right: 10px;"></i>
+          <span class="task-text" style="flex-grow: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            ${nextConsideredTask.text}
+          </span>
+          <span style="margin-left: 10px;">2</span>
+        </button>
+        <button class="defer-btn" id="defer-next" title="Defer" style="background: none; border: none; cursor: pointer; padding: 5px;">
+          <i data-feather="chevron-right" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
     </div>
   `;
   document.body.appendChild(dialog);
 
-  // Set the width of the comparison dialog to match the task list
-  const taskList = document.getElementById('taskList');
-  if (taskList) {
-    const taskListWidth = taskList.offsetWidth;
-    dialog.style.width = `${taskListWidth}px`;
-  }
+  // Replace feather icons
+  feather.replace({ 'width': 18, 'height': 18 });
+
+  // Add event listeners for the new defer buttons
+  document.getElementById('defer-benchmark').addEventListener('click', handleDeferBenchmark);
+  document.getElementById('defer-next').addEventListener('click', handleDeferNext);
+
+  // Add event listeners for the task selection buttons
+  document.getElementById('choose-benchmark').addEventListener('click', handleChooseBenchmark);
+  document.getElementById('choose-next').addEventListener('click', handleChooseNext);
 
   function handleChooseBenchmark() {
     closeDialog(dialog);
@@ -976,11 +996,14 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
     nextConsideredTask = null; // Clear the nextConsideredTask to prevent runaway selection
   }
 
+  function handleDeferBenchmark() {
+    toggleDeferred(benchmarkTask.uuid); // Defer the benchmark task
+    handleChooseNext();
+  }
+
   function handleDeferNext() {
     toggleDeferred(nextConsideredTask.uuid);
-    closeDialog(dialog);
-    initiatePreselection(nextConsideredTask);
-    nextConsideredTask = null; // Clear the nextConsideredTask to prevent runaway selection
+    handleChooseBenchmark();
   }
 
   function handleChooseCancel() {
@@ -1005,6 +1028,7 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
 
   document.getElementById('choose-benchmark').addEventListener('click', handleChooseBenchmark);
   document.getElementById('choose-next').addEventListener('click', handleChooseNext);
+  document.getElementById('defer-benchmark').addEventListener('click', handleDeferBenchmark);
   document.getElementById('defer-next').addEventListener('click', handleDeferNext);
 
   // Remove the event listener when the dialog is closed
