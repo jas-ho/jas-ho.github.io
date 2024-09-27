@@ -234,7 +234,7 @@ function promptForReflection(uuid, onComplete) {
     dialog.classList.add('reflection-dialog');
     dialog.innerHTML = `
       <p>You worked on "${task.text}" for ${elapsedTime} minutes. How did it go?</p>
-      <input type="text" id="reflection-input" placeholder="Enter your reflection here...">
+      <textarea id="reflection-input" placeholder="Enter your reflection here..." rows="3"></textarea>
       <div class="dialog-actions">
         <button id="complete-task-btn">Complete task now (Enter)</button>
         <button id="shelve-task-btn">Shelve task for later (${modifierKey}+Enter)</button>
@@ -295,7 +295,7 @@ function promptForReflection(uuid, onComplete) {
     document.getElementById('cancel-btn').addEventListener('click', handleCancel);
 
     function handleKeydown(e) {
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         if (e.ctrlKey || e.metaKey) {
           handleShelve();
