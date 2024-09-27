@@ -389,10 +389,22 @@ function deleteTask(uuid) {
 let isToggling = false;
 
 function startTask(task) {
+  // Stop all other running tasks
+  tasks.forEach(t => {
+    if (t.lastStartedTime !== null && t.uuid !== task.uuid) {
+      stopTask(t); // Stop other tasks
+    }
+  });
+
   task.lastStartedTime = Date.now();
   if (task.startTime === null) {
     task.startTime = task.lastStartedTime;
+    console.log('started task', task.uuid);
   }
+
+  // Save and render after starting the task
+  saveTasksToLocalStorage(tasks);
+  renderTasks();
 }
 
 function stopTask(task) {
@@ -400,36 +412,38 @@ function stopTask(task) {
     task.cumulativeTimeInSeconds += (Date.now() - task.lastStartedTime) / 1000;
     task.lastStartedTime = null;
     task.endTime = Date.now();
+    console.log('stopped task', task.uuid);
+
+    // Save and render after stopping the task
+    saveTasksToLocalStorage(tasks);
+    renderTasks();
   }
 }
 
+// Update toggleStart to use startTask and stopTask directly
 function toggleStart(uuid) {
   const task = findTaskByUUID(uuid);
   if (task) {
-    if (isToggling) return; // Prevent multiple triggers
-    isToggling = true;
-
-    // Stop all other running tasks
-    tasks.forEach(t => {
-      if (t.lastStartedTime !== null && t.uuid !== uuid) {
-        stopTask(t);
-      }
-    });
-
     if (task.lastStartedTime === null) {
       startTask(task);
     } else {
       stopTask(task);
     }
 
-    saveTasksToLocalStorage(tasks);
-    renderTasks();
     setFocus(uuid);
     logInteraction('toggleStart', uuid);
+  }
+}
 
-    setTimeout(() => {
-      isToggling = false;
-    }, 100);
+// Update finalizePreselection to call startTask directly
+function finalizePreselection() {
+  console.log('Finalizing Preselection');
+  const currentBenchmarkTask = getCurrentBenchmarkTask();
+  if (currentBenchmarkTask) {
+    console.log('Top Priority Task:', currentBenchmarkTask);
+    startTask(currentBenchmarkTask); // Directly start the task
+  } else {
+    console.log('No tasks to execute.');
   }
 }
 
@@ -1006,7 +1020,7 @@ function finalizePreselection() {
   const currentBenchmarkTask = getCurrentBenchmarkTask();
   if (currentBenchmarkTask) {
     console.log('Top Priority Task:', currentBenchmarkTask);
-    // Add logic to execute the top priority task or notify the user
+    startTask(currentBenchmarkTask); // Directly start the task
   } else {
     console.log('No tasks to execute.');
   }
