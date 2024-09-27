@@ -83,6 +83,12 @@ function updateToggleCompletedButton() {
 }
 
 function clearCompletedTasks() {
+  // if there are no completed tasks, alert the user using a modal (todo)
+  if (tasks.filter(task => task.completed).length === 0) {
+    // showModal('No completed tasks to clear.');
+    alert('No completed tasks to clear.');  // todo: replace with modal
+    return;
+  }
   if (confirm('Are you sure you want to delete all completed tasks?')) {
     tasks = tasks.filter(task => !task.completed);
     saveTasksToLocalStorage(tasks);
