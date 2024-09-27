@@ -230,7 +230,7 @@ function reopenTask(uuid) {
 }
 
 function promptForReflection(uuid, onComplete) {
-  showOverlay(); // Add this line
+  showOverlay();
   const task = findTaskByUUID(uuid);
   if (task) {
     const elapsedTime = Math.ceil(task.cumulativeTimeInSeconds / 60);
@@ -249,11 +249,17 @@ function promptForReflection(uuid, onComplete) {
         <button id="cancel-btn">Cancel (Esc)</button>
       </div>
     `;
-    document.body.appendChild(dialog);
+
+    // Determine the container based on fullscreen mode
+    const container = isFullscreenMode ? document.getElementById('fvp-container') : document.body;
+    container.appendChild(dialog);
+
+    // Store the container reference on the dialog element
+    dialog.dataset.container = isFullscreenMode ? 'fvp-container' : 'body';
 
     // Add inline styles for the dialog and input
     dialog.style.cssText = `
-      position: fixed;
+      position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
@@ -263,7 +269,7 @@ function promptForReflection(uuid, onComplete) {
       border-radius: 8px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       border: 1px solid var(--border-color, #ccc);
-      z-index: 1000;
+      z-index: 1001;
       width: 90%;
       max-width: 800px;
     `;
@@ -382,10 +388,12 @@ function toggleDeferred(uuid) {
 }
 
 function closeDialog(dialog) {
-  if (document.body.contains(dialog)) {
-    document.body.removeChild(dialog);
+  const containerType = dialog.dataset.container;
+  const container = containerType === 'fvp-container' ? document.getElementById('fvp-container') : document.body;
+  if (container.contains(dialog)) {
+    container.removeChild(dialog);
   }
-  hideOverlay(); // Add this line
+  hideOverlay();
 }
 
 function deleteTask(uuid) {
@@ -1141,8 +1149,10 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
 
 // Function to close the comparison dialog
 function closeDialog(dialog) {
-  if (document.body.contains(dialog)) {
-    document.body.removeChild(dialog);
+  const containerType = dialog.dataset.container;
+  const container = containerType === 'fvp-container' ? document.getElementById('fvp-container') : document.body;
+  if (container.contains(dialog)) {
+    container.removeChild(dialog);
   }
   hideOverlay(); // Add this line
 }
