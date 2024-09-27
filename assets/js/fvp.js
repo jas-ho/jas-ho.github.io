@@ -924,6 +924,10 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
         <span>${nextConsideredTask.text}</span>
         <span class="key">2</span> <!-- Visual indication for keyboard shortcut -->
       </button>
+      <button class="task-option" id="defer-next">
+        <span>Defer "${nextConsideredTask.text}"</span>
+        <span class="key">0</span> <!-- Visual indication for keyboard shortcut -->
+      </button>
     </div>
   `;
   document.body.appendChild(dialog);
@@ -950,23 +954,41 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
     nextConsideredTask = null; // Clear the nextConsideredTask to prevent runaway selection
   }
 
+  function handleDeferNext() {
+    toggleDeferred(nextConsideredTask.uuid);
+    closeDialog(dialog);
+    initiatePreselection(nextConsideredTask);
+    nextConsideredTask = null; // Clear the nextConsideredTask to prevent runaway selection
+  }
+
   function handleChooseCancel() {
     closeDialog(dialog);
     finalizePreselection();
   }
+
   // Add keyboard shortcuts for task selection
-  document.addEventListener('keydown', function(e) {
+  function handleKeydown(e) {
     if (e.key === '1') {
       handleChooseBenchmark();
     } else if (e.key === '2') {
       handleChooseNext();
+    } else if (e.key === '0') {
+      handleDeferNext();
     } else if (e.key === 'Escape') {
       handleChooseCancel();
     }
-  });
+  }
+
+  document.addEventListener('keydown', handleKeydown);
 
   document.getElementById('choose-benchmark').addEventListener('click', handleChooseBenchmark);
   document.getElementById('choose-next').addEventListener('click', handleChooseNext);
+  document.getElementById('defer-next').addEventListener('click', handleDeferNext);
+
+  // Remove the event listener when the dialog is closed
+  dialog.addEventListener('DOMNodeRemoved', () => {
+    document.removeEventListener('keydown', handleKeydown);
+  });
 
   console.log('Comparing Tasks:', { benchmarkTask, nextConsideredTask });
 }
