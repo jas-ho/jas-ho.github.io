@@ -25,4 +25,4 @@ package-lock.json
 # Misc
 _sass/dist
 assets/js/dist
-webtools/fvp-preselection-spec-sheet.md
+static/fvp/fvp-preselection-spec-sheet.md

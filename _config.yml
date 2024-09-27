@@ -243,9 +243,6 @@ plugins:
   - jemoji
   - jekyll-include-cache
 
-include:
-  - webtools
-
 # HTML Proofer settings
 htmlproofer:
   url_ignore:
