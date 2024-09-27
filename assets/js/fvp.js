@@ -442,6 +442,9 @@ function finalizePreselection() {
   if (currentBenchmarkTask) {
     console.log('Top Priority Task:', currentBenchmarkTask);
     startTask(currentBenchmarkTask); // Directly start the task
+    setTimeout(() => {
+      setFocus(currentBenchmarkTask.uuid); // Use setTimeout to ensure the task is rendered before focusing
+    }, 0);
   } else {
     console.log('No tasks to execute.');
   }
@@ -1021,6 +1024,9 @@ function finalizePreselection() {
   if (currentBenchmarkTask) {
     console.log('Top Priority Task:', currentBenchmarkTask);
     startTask(currentBenchmarkTask); // Directly start the task
+    setTimeout(() => {
+      setFocus(currentBenchmarkTask.uuid); // Use setTimeout to ensure the task is rendered before focusing
+    }, 0);
   } else {
     console.log('No tasks to execute.');
   }
