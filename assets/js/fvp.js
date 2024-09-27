@@ -978,7 +978,6 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
           <span class="task-text" style="flex-grow: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
             ${benchmarkTask ? benchmarkTask.text : 'No benchmark task'}
           </span>
-          <span style="margin-left: 10px;">1</span>
         </button>
         <button class="defer-btn" id="defer-benchmark" title="Defer" style="background: none; border: none; cursor: pointer; padding: 5px;">
           <i data-feather="chevron-right" style="width: 18px; height: 18px;"></i>
@@ -990,7 +989,6 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
           <span class="task-text" style="flex-grow: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
             ${nextConsideredTask.text}
           </span>
-          <span style="margin-left: 10px;">2</span>
         </button>
         <button class="defer-btn" id="defer-next" title="Defer" style="background: none; border: none; cursor: pointer; padding: 5px;">
           <i data-feather="chevron-right" style="width: 18px; height: 18px;"></i>
