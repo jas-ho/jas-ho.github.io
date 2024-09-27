@@ -250,12 +250,7 @@ function promptForReflection(uuid, onComplete) {
       </div>
     `;
 
-    // Determine the container based on fullscreen mode
-    const container = isFullscreenMode ? document.getElementById('fvp-container') : document.body;
-    container.appendChild(dialog);
-
-    // Store the container reference on the dialog element
-    dialog.dataset.container = isFullscreenMode ? 'fvp-container' : 'body';
+    setupDialog(dialog);
 
     // Add inline styles for the dialog and input
     dialog.style.cssText = `
@@ -385,6 +380,13 @@ function toggleDeferred(uuid) {
   renderTasks();
   logInteraction('toggleDeferred', uuid);
   console.log('deferral status:', task.deferred);
+}
+
+function setupDialog(dialog) {
+  const container = isFullscreenMode ? document.getElementById('fvp-container') : document.body;
+  container.appendChild(dialog);
+  dialog.dataset.container = isFullscreenMode ? 'fvp-container' : 'body';
+  return container;
 }
 
 function closeDialog(dialog) {
@@ -1038,14 +1040,9 @@ function initiatePreselection(lastConsideredTask = null) {
 
 // Function to compare two tasks and update marked status if necessary
 function compareTasks(benchmarkTask, nextConsideredTask) {
-  showOverlay(); // Add this line
+  showOverlay();
   const dialog = document.createElement('div');
   dialog.classList.add('comparison-dialog');
-  dialog.style.maxWidth = '500px';
-  dialog.style.margin = '0 auto';
-  dialog.style.padding = '20px';
-  dialog.style.borderRadius = '8px';
-  dialog.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
   dialog.innerHTML = `
     <p>Which task do you prefer to do next?</p>
     <div class="task-comparison" style="width: 100%; max-width: 500px;">
@@ -1073,22 +1070,21 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
       </div>
     </div>
   `;
-  document.body.appendChild(dialog);
+
+  setupDialog(dialog);
 
   // Replace feather icons
   feather.replace({ 'width': 18, 'height': 18 });
 
-  // Add event listeners for the new defer buttons
+  // Add event listeners for the buttons
   document.getElementById('defer-benchmark').addEventListener('click', handleDeferBenchmark);
   document.getElementById('defer-next').addEventListener('click', handleDeferNext);
-
-  // Add event listeners for the task selection buttons
   document.getElementById('choose-benchmark').addEventListener('click', handleChooseBenchmark);
   document.getElementById('choose-next').addEventListener('click', handleChooseNext);
 
   function handleChooseBenchmark() {
     closeDialog(dialog);
-    hideOverlay(); // Add this line
+    hideOverlay();
     initiatePreselection(nextConsideredTask);
     nextConsideredTask = null; // Clear the nextConsideredTask to prevent runaway selection
   }
@@ -1098,7 +1094,7 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
       toggleMark(nextConsideredTask.uuid);
     }
     closeDialog(dialog);
-    hideOverlay(); // Add this line
+    hideOverlay();
     initiatePreselection(nextConsideredTask);
     nextConsideredTask = null; // Clear the nextConsideredTask to prevent runaway selection
   }
@@ -1115,7 +1111,7 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
 
   function handleChooseCancel() {
     closeDialog(dialog);
-    hideOverlay(); // Add this line
+    hideOverlay();
     finalizePreselection();
   }
 
@@ -1147,15 +1143,6 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
   console.log('Comparing Tasks:', { benchmarkTask, nextConsideredTask });
 }
 
-// Function to close the comparison dialog
-function closeDialog(dialog) {
-  const containerType = dialog.dataset.container;
-  const container = containerType === 'fvp-container' ? document.getElementById('fvp-container') : document.body;
-  if (container.contains(dialog)) {
-    container.removeChild(dialog);
-  }
-  hideOverlay(); // Add this line
-}
 
 document.getElementById('preselection-btn').addEventListener('click', function() {
   initiatePreselection();
