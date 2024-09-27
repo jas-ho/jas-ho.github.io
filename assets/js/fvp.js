@@ -1043,35 +1043,99 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
   showOverlay();
   const dialog = document.createElement('div');
   dialog.classList.add('comparison-dialog');
+
   dialog.innerHTML = `
     <p>Which task do you prefer to do next?</p>
-    <div class="task-comparison" style="width: 100%; max-width: 500px;">
-      <div class="task-item" style="display: flex; align-items: center; margin-bottom: 15px; width: 100%;">
-        <button class="task-option" id="choose-benchmark" title="Select Task" style="display: flex; align-items: center; background: none; border: none; cursor: pointer; padding: 5px; width: 100%;">
-          <i data-feather="play" style="width: 18px; height: 18px; margin-right: 10px;"></i>
-          <span class="task-text" style="flex-grow: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+    <div class="task-comparison">
+      <div class="task-item">
+        <button class="task-option" id="choose-benchmark" title="Select Task">
+          <i data-feather="play"></i>
+          <span class="task-text">
             ${benchmarkTask ? benchmarkTask.text : 'No benchmark task'}
           </span>
         </button>
-        <button class="defer-btn" id="defer-benchmark" title="Defer" style="background: none; border: none; cursor: pointer; padding: 5px;">
-          <i data-feather="chevron-right" style="width: 18px; height: 18px;"></i>
+        <button class="defer-btn" id="defer-benchmark" title="Defer">
+          <i data-feather="chevron-right"></i>
         </button>
       </div>
-      <div class="task-item" style="display: flex; align-items: center; margin-bottom: 15px; width: 100%;">
-        <button class="task-option" id="choose-next" title="Select Task" style="display: flex; align-items: center; background: none; border: none; cursor: pointer; padding: 5px; width: 100%;">
-          <i data-feather="play" style="width: 18px; height: 18px; margin-right: 10px;"></i>
-          <span class="task-text" style="flex-grow: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+      <div class="task-item">
+        <button class="task-option" id="choose-next" title="Select Task">
+          <i data-feather="play"></i>
+          <span class="task-text">
             ${nextConsideredTask.text}
           </span>
         </button>
-        <button class="defer-btn" id="defer-next" title="Defer" style="background: none; border: none; cursor: pointer; padding: 5px;">
-          <i data-feather="chevron-right" style="width: 18px; height: 18px;"></i>
+        <button class="defer-btn" id="defer-next" title="Defer">
+          <i data-feather="chevron-right"></i>
         </button>
       </div>
     </div>
   `;
 
-  setupDialog(dialog);
+  const container = setupDialog(dialog);
+
+  // Add inline styles for the dialog
+  dialog.style.cssText = `
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--main-bg, #fff);
+    color: var(--text-color, #000);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color, #ccc);
+    z-index: 1001;
+    width: 90%;
+    max-width: 800px;
+  `;
+
+  // Add styles for the task comparison elements
+  const style = document.createElement('style');
+  style.textContent = `
+    .task-comparison {
+      width: 100%;
+    }
+    .task-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      width: 100%;
+    }
+    .task-option {
+      display: flex;
+      align-items: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+      width: 100%;
+    }
+    .task-option i {
+      width: 18px;
+      height: 18px;
+      margin-right: 10px;
+    }
+    .task-text {
+      flex-grow: 1;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .defer-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+    }
+    .defer-btn i {
+      width: 18px;
+      height: 18px;
+    }
+  `;
+  dialog.appendChild(style);
 
   // Replace feather icons
   feather.replace({ 'width': 18, 'height': 18 });
@@ -1135,9 +1199,12 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
   document.getElementById('defer-benchmark').addEventListener('click', handleDeferBenchmark);
   document.getElementById('defer-next').addEventListener('click', handleDeferNext);
 
-  // Remove the event listener when the dialog is closed
+  // Remove the event listener and style element when the dialog is closed
   dialog.addEventListener('DOMNodeRemoved', () => {
     document.removeEventListener('keydown', handleKeydown);
+    if (style.parentNode) {
+      style.parentNode.removeChild(style);
+    }
   });
 
   console.log('Comparing Tasks:', { benchmarkTask, nextConsideredTask });
