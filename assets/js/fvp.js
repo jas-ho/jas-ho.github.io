@@ -1,5 +1,6 @@
 let tasks = [];
 let focusedUUID = null;
+let isFullscreenMode = false;
 
 function saveTasksToLocalStorage(tasks) {
   try {
@@ -545,23 +546,40 @@ function toggleFullscreen(forceState) {
   const fullscreenToggle = document.getElementById('fullscreen-toggle');
 
   // If forceState is provided, use it; otherwise, toggle the current state
-  const isFullscreen = forceState !== undefined ? forceState : !container.classList.contains('fullscreen');
+  isFullscreenMode = forceState !== undefined ? forceState : !container.classList.contains('fullscreen');
 
-  container.classList.toggle('fullscreen', isFullscreen);
+  container.classList.toggle('fullscreen', isFullscreenMode);
 
   // Update the icon and title
-  fullscreenToggle.innerHTML = `<i data-feather="${isFullscreen ? 'minimize' : 'maximize'}"></i>`;
-  fullscreenToggle.title = isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen';
+  fullscreenToggle.innerHTML = `<i data-feather="${isFullscreenMode ? 'minimize' : 'maximize'}"></i>`;
+  fullscreenToggle.title = isFullscreenMode ? 'Exit Fullscreen' : 'Enter Fullscreen';
 
   // Hide/show the sidebar and other page elements
   const sidebar = document.querySelector('.sidebar');
   const content = document.querySelector('.content');
-  if (sidebar) sidebar.style.display = isFullscreen ? 'none' : '';
-  if (content) content.style.width = isFullscreen ? '100%' : '';
+  if (sidebar) sidebar.style.display = isFullscreenMode ? 'none' : '';
+  if (content) content.style.width = isFullscreenMode ? '100%' : '';
 
   // Show/hide the inner title
   const innerTitle = container.querySelector('h1');
-  if (innerTitle) innerTitle.style.display = isFullscreen ? 'block' : 'none';
+  if (innerTitle) innerTitle.style.display = isFullscreenMode ? 'block' : 'none';
+
+  // Adjust container position and size for fullscreen mode
+  if (isFullscreenMode) {
+    container.style.position = 'fixed';
+    container.style.top = '0';
+    container.style.left = '0';
+    container.style.width = '100vw';
+    container.style.height = '100vh';
+    container.style.zIndex = '9999';
+  } else {
+    container.style.position = '';
+    container.style.top = '';
+    container.style.left = '';
+    container.style.width = '';
+    container.style.height = '';
+    container.style.zIndex = '';
+  }
 
   // Replace the Feather icon
   feather.replace();
@@ -823,10 +841,11 @@ function startUpdatingTime() {
 }
 
 function showOverlay() {
+  const container = isFullscreenMode ? document.getElementById('fvp-container') : document.body;
   const overlay = document.createElement('div');
   overlay.id = 'fvp-overlay';
   overlay.style.cssText = `
-    position: fixed;
+    position: ${isFullscreenMode ? 'absolute' : 'fixed'};
     top: 0;
     left: 0;
     width: 100%;
@@ -834,7 +853,7 @@ function showOverlay() {
     background-color: var(--main-bg);
     z-index: 999;
   `;
-  document.body.appendChild(overlay);
+  container.appendChild(overlay);
 }
 
 function hideOverlay() {
