@@ -1006,9 +1006,12 @@ function initiatePreselection(lastConsideredTask = null) {
   let currentBenchmarkTask = getCurrentBenchmarkTask();
   if (!currentBenchmarkTask) {
     console.log('No current benchmark task, starting with the first uncompleted task');
-    currentBenchmarkTask = tasks.find(task => !task.completed);
+    currentBenchmarkTask = tasks.find(task => !task.completed && !task.deferred);
     if (currentBenchmarkTask) {
       toggleMark(currentBenchmarkTask.uuid);
+    } else {
+      console.log('No uncompleted tasks available');
+      return;
     }
   }
   console.log('Current Benchmark Task:', currentBenchmarkTask);
@@ -1024,7 +1027,7 @@ function initiatePreselection(lastConsideredTask = null) {
       nextConsideredTask = getNextUncompletedTask(currentBenchmarkTask);
     } else {
       nextConsideredTask = getNextUncompletedTask(previousBenchmarkTask);
-      if (nextConsideredTask === undefined) {
+      if (!nextConsideredTask) {
         console.log('Next considered task is undefined, getting next uncompleted from current benchmark task');
         nextConsideredTask = getNextUncompletedTask(currentBenchmarkTask);
       }
@@ -1094,17 +1097,10 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
   // Replace feather icons
   feather.replace({ 'width': 18, 'height': 18 });
 
-  // Add event listeners for the buttons
-  document.getElementById('defer-benchmark').addEventListener('click', handleDeferBenchmark);
-  document.getElementById('defer-next').addEventListener('click', handleDeferNext);
-  document.getElementById('choose-benchmark').addEventListener('click', handleChooseBenchmark);
-  document.getElementById('choose-next').addEventListener('click', handleChooseNext);
-
   function handleChooseBenchmark() {
     closeDialog(dialog);
     hideOverlay();
     initiatePreselection(nextConsideredTask);
-    nextConsideredTask = null; // Clear the nextConsideredTask to prevent runaway selection
   }
 
   function handleChooseNext() {
@@ -1114,11 +1110,10 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
     closeDialog(dialog);
     hideOverlay();
     initiatePreselection(nextConsideredTask);
-    nextConsideredTask = null; // Clear the nextConsideredTask to prevent runaway selection
   }
 
   function handleDeferBenchmark() {
-    toggleDeferred(benchmarkTask.uuid); // Defer the benchmark task
+    toggleDeferred(benchmarkTask.uuid);
     handleChooseNext();
   }
 
@@ -1133,7 +1128,6 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
     finalizePreselection();
   }
 
-  // Add keyboard shortcuts for task selection
   function handleKeydown(e) {
     if (e.key === '1') {
       handleChooseBenchmark();
@@ -1153,12 +1147,8 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
   document.getElementById('defer-benchmark').addEventListener('click', handleDeferBenchmark);
   document.getElementById('defer-next').addEventListener('click', handleDeferNext);
 
-  // Remove the event listener and style element when the dialog is closed
   dialog.addEventListener('DOMNodeRemoved', () => {
     document.removeEventListener('keydown', handleKeydown);
-    if (style.parentNode) {
-      style.parentNode.removeChild(style);
-    }
   });
 
   console.log('Comparing Tasks:', { benchmarkTask, nextConsideredTask });
