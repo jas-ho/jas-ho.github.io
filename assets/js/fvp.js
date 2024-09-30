@@ -729,22 +729,36 @@ document.getElementById('delete-all').addEventListener('click', function() {
   }
 });
 
-document.getElementById('export-btn').addEventListener('click', function() {
+document.getElementById('export-btn').addEventListener('click', async function() {
   const timestamp = new Date().toISOString().split('T')[0];
-  console.log('Timestamp:', timestamp);
+  const defaultFilename = `${timestamp}_FVP_tasks.json`;
 
-  const filename = `${timestamp}_FVP_tasks.json`;
-  console.log('Filename:', filename);
+  try {
+    // Show the file picker dialog
+    const fileHandle = await window.showSaveFilePicker({
+      suggestedName: defaultFilename,
+      types: [{
+        description: 'JSON Files',
+        accept: {'application/json': ['.json']},
+      }],
+    });
 
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasks));
-  const downloadAnchorNode = document.createElement('a');
-  downloadAnchorNode.setAttribute("href", dataStr);
-  downloadAnchorNode.setAttribute("download", filename);
-  console.log('Download attribute:', downloadAnchorNode.download);
+    // Create a FileSystemWritableFileStream to write to
+    const writable = await fileHandle.createWritable();
 
-  document.body.appendChild(downloadAnchorNode);
-  downloadAnchorNode.click();
-  downloadAnchorNode.remove();
+    // Write the contents
+    await writable.write(JSON.stringify(tasks, null, 2));
+
+    // Close the file and write the contents to disk
+    await writable.close();
+
+    console.log('File saved successfully');
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      console.error('Failed to save file:', err);
+      alert('Failed to save file. Please try again.');
+    }
+  }
 });
 
 document.getElementById('import-btn').addEventListener('click', function() {
