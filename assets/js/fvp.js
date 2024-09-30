@@ -732,34 +732,46 @@ document.getElementById('delete-all').addEventListener('click', function() {
 document.getElementById('export-btn').addEventListener('click', async function() {
   const timestamp = new Date().toISOString().split('T')[0];
   const defaultFilename = `${timestamp}_FVP_tasks.json`;
+  const jsonString = JSON.stringify(tasks, null, 2);
 
-  try {
-    // Show the file picker dialog
-    const fileHandle = await window.showSaveFilePicker({
-      suggestedName: defaultFilename,
-      types: [{
-        description: 'JSON Files',
-        accept: {'application/json': ['.json']},
-      }],
-    });
+  if ('showSaveFilePicker' in window) {
+    try {
+      const fileHandle = await window.showSaveFilePicker({
+        suggestedName: defaultFilename,
+        types: [{
+          description: 'JSON Files',
+          accept: {'application/json': ['.json']},
+        }],
+      });
 
-    // Create a FileSystemWritableFileStream to write to
-    const writable = await fileHandle.createWritable();
+      const writable = await fileHandle.createWritable();
+      await writable.write(jsonString);
+      await writable.close();
 
-    // Write the contents
-    await writable.write(JSON.stringify(tasks, null, 2));
-
-    // Close the file and write the contents to disk
-    await writable.close();
-
-    console.log('File saved successfully');
-  } catch (err) {
-    if (err.name !== 'AbortError') {
-      console.error('Failed to save file:', err);
-      alert('Failed to save file. Please try again.');
+      console.log('File saved successfully using File System Access API');
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Failed to save file:', err);
+        fallbackSaveMethod(jsonString, defaultFilename);
+      }
     }
+  } else {
+    fallbackSaveMethod(jsonString, defaultFilename);
   }
 });
+
+function fallbackSaveMethod(content, filename) {
+  const blob = new Blob([content], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  console.log('File saved successfully using fallback method');
+}
 
 document.getElementById('import-btn').addEventListener('click', function() {
   document.getElementById('import-file').click();
