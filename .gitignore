@@ -26,3 +26,4 @@ package-lock.json
 _sass/dist
 assets/js/dist
 static/fvp/fvp-preselection-spec-sheet.md
+.DS_Store
