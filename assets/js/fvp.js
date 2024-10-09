@@ -238,7 +238,11 @@ function promptForReflection(uuid, onComplete) {
 
     const elapsedTime = Math.ceil(task.cumulativeTimeInSeconds / 60);
 
-    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    // Check if userAgentData is available
+    const isMac = navigator.userAgentData ?
+        navigator.userAgentData.platform.toUpperCase().indexOf('MAC') >= 0 :
+        navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
     const modifierKey = isMac ? '⌘' : 'Ctrl';
 
     const dialog = document.createElement('div');
