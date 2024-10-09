@@ -233,6 +233,9 @@ function promptForReflection(uuid, onComplete) {
   showOverlay();
   const task = findTaskByUUID(uuid);
   if (task) {
+    // Stop the task to ensure cumulative time is up-to-date
+    stopTask(task);
+
     const elapsedTime = Math.ceil(task.cumulativeTimeInSeconds / 60);
 
     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -241,7 +244,7 @@ function promptForReflection(uuid, onComplete) {
     const dialog = document.createElement('div');
     dialog.classList.add('reflection-dialog');
     dialog.innerHTML = `
-      <p>You worked on "${task.text}" for ${elapsedTime} minutes. How did it go?</p>
+      <p>You worked on "${task.text}" for ${elapsedTime} min. How did it go?</p>
       <textarea id="reflection-input" placeholder="Enter your reflection here..." rows="3"></textarea>
       <div class="dialog-actions">
         <button id="complete-task-btn">Complete task now (Enter)</button>
