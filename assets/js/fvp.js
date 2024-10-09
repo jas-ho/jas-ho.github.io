@@ -109,8 +109,10 @@ function renderTasks() {
     const index = tasks.indexOf(task);
     const li = document.createElement('li');
     li.setAttribute('data-task-uuid', task.uuid); // Use UUID
+    li.setAttribute('draggable', 'true'); // Make the task draggable
 
     li.innerHTML = `
+    <span class="drag-handle" title="Drag to reorder">☰</span> <!-- Add drag handle -->
     <span class="task-text" ondblclick="editTaskTitle('${task.uuid}')">${task.text}</span>
     <span class="stopwatch" ondblclick="editTaskTime('${task.uuid}')">${formatTime(getDisplayedTime(task))}</span>
     <div class="controls">
@@ -827,6 +829,57 @@ document.addEventListener('DOMContentLoaded', () => {
   feather.replace();
   updateToggleCompletedButton();
   toggleFullscreen(true); // Set fullscreen mode by default
+
+  const taskList = document.getElementById('taskList');
+
+  taskList.addEventListener('dragstart', (e) => {
+    if (e.target.tagName === 'LI') {
+      e.dataTransfer.setData('text/plain', e.target.dataset.taskUuid);
+    }
+  });
+
+  taskList.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const afterElement = getDragAfterElement(taskList, e.clientY);
+    const draggable = document.querySelector('.dragging');
+    if (afterElement == null) {
+      taskList.appendChild(draggable);
+    } else {
+      taskList.insertBefore(draggable, afterElement);
+    }
+  });
+
+  taskList.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const uuid = e.dataTransfer.getData('text/plain');
+    const draggedTask = findTaskByUUID(uuid);
+    const afterElement = getDragAfterElement(taskList, e.clientY);
+    const afterUUID = afterElement ? afterElement.dataset.taskUuid : null;
+    reorderTasks(draggedTask, afterUUID);
+    saveTasksToLocalStorage(tasks);
+    renderTasks();
+  });
+
+  function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('li:not(.dragging)')];
+
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
+  function reorderTasks(draggedTask, afterUUID) {
+    const draggedIndex = tasks.indexOf(draggedTask);
+    tasks.splice(draggedIndex, 1);
+    const afterIndex = afterUUID ? tasks.findIndex(task => task.uuid === afterUUID) : tasks.length;
+    tasks.splice(afterIndex, 0, draggedTask);
+  }
 });
 
 // Listen for changes to LocalStorage
