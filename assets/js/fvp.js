@@ -233,8 +233,9 @@ function promptForReflection(uuid, onComplete) {
   showOverlay();
   const task = findTaskByUUID(uuid);
   if (task) {
-    // Stop the task to ensure cumulative time is up-to-date
+    // Stop the task to ensure cumulative time is up-to-date and restart immediately to account for reflection time
     stopTask(task);
+    startTask(task);
 
     const elapsedTime = Math.ceil(task.cumulativeTimeInSeconds / 60);
 
@@ -426,19 +427,21 @@ function deleteTask(uuid) {
 let isToggling = false;
 
 function startTask(task) {
-  console.log('Starting task:', task);
+  console.log('Starting task: ', task);
   // Stop all other running tasks
   tasks.forEach(t => {
     if (t.lastStartedTime !== null && t.uuid !== task.uuid) {
-      stopTask(t); // Stop other tasks
+      stopTask(t);
     }
   });
 
-  if (task.startTime === null) {
+  if (task.lastStartedTime === null) {
     // only start the task if it hasn't been started yet
     task.lastStartedTime = Date.now();
     task.startTime = task.lastStartedTime;
     console.log('started task', task.uuid);
+  } else {
+    console.warn('attempting to start a task that has already been started. Task: ', task);
   }
 
   // Save and render after starting the task
