@@ -1155,6 +1155,9 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
   }
 
   function handleKeydown(e) {
+    // Check if the dialog is currently in the DOM
+    if (!document.body.contains(dialog)) return;
+
     if (e.key === '1') {
       handleChooseBenchmark();
     } else if (e.key === '2') {
