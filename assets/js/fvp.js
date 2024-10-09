@@ -936,6 +936,10 @@ function editTaskTitle(uuid) {
   const input = document.createElement('input');
   input.type = 'text';
   input.value = task.text;
+
+  // Set the input width to match the task text width
+  input.style.width = `${taskText.offsetWidth}px`; // Match the width of the task text
+
   input.onblur = function() {
     task.text = input.value;
     saveTasksToLocalStorage(tasks);
@@ -964,6 +968,21 @@ function editTaskTime(uuid) {
   input.type = 'text';
   input.value = formatTime(getDisplayedTime(task));
 
+  // Match the font size, padding, and border of the stopwatch
+  const computedStyle = window.getComputedStyle(stopwatch);
+  const fontSize = parseFloat(computedStyle.fontSize) * 0.9; // Decrease font size by 10%
+  input.style.fontSize = `${fontSize}px`;
+  input.style.padding = computedStyle.padding;
+  input.style.border = computedStyle.border;
+  input.style.boxSizing = 'border-box'; // Ensure padding and border are included in the width
+
+  // Set the input width dynamically based on its content
+  input.style.width = `${input.value.length + 1}ch`; // Set width based on character count
+
+  input.oninput = function() {
+    input.style.width = `${input.value.length + 1}ch`; // Adjust width as user types
+  };
+
   input.onblur = function() {
     const seconds = parseTime(input.value);
     task.cumulativeTimeInSeconds = seconds;
@@ -982,6 +1001,7 @@ function editTaskTime(uuid) {
 
   stopwatch.replaceWith(input);
   input.focus();
+  input.setSelectionRange(0, 0); // Set cursor to the start of the input
 }
 
 // Helper function to parse time string to seconds
