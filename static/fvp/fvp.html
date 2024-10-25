@@ -446,6 +446,22 @@ title: FVP Task Manager
     user-select: none;
   }
 
+  .edit-task-input {
+    background: none;
+    border: none;
+    font-size: inherit;
+    font-family: inherit;
+    color: inherit;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    outline: none;
+  }
+
+  .edit-task-input:focus {
+    border-bottom: 1px solid var(--accent-color, #007bff);
+  }
+
 </style>
 
 <div id="fvp-container">
@@ -495,3 +511,4 @@ title: FVP Task Manager
 
 <script src="{{ '/assets/js/fvp.js' | relative_url }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+

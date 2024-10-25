@@ -692,6 +692,12 @@ document.addEventListener('keydown', function(e) {
         }
       }
       e.preventDefault();
+    } else if (e.key === 'Enter') {
+      // Enter "edit task title" mode when Enter is pressed
+      if (focusedUUID) {
+        editTaskTitle(focusedUUID);
+        e.preventDefault();
+      }
     } else {
       switch (e.key) {
         case 'm': // Mark
@@ -989,24 +995,31 @@ function editTaskTitle(uuid) {
   const input = document.createElement('input');
   input.type = 'text';
   input.value = task.text;
+  input.className = 'edit-task-input'; // Add a class for styling
 
   // Set the input width to match the task text width
   input.style.width = `${taskText.offsetWidth}px`; // Match the width of the task text
 
   input.onblur = function() {
-    task.text = input.value;
-    saveTasksToLocalStorage(tasks);
-    renderTasks();
+    finishEditing(task, input);
   };
   input.onkeydown = function(e) {
     if (e.key === 'Enter') {
-      task.text = input.value;
-      saveTasksToLocalStorage(tasks);
-      renderTasks();
+      finishEditing(task, input);
+    } else if (e.key === 'Escape') {
+      taskText.replaceWith(taskText); // Cancel editing
     }
   };
   taskText.replaceWith(input);
   input.focus();
+  input.select(); // Select all text in the input
+}
+
+function finishEditing(task, input) {
+  task.text = input.value;
+  saveTasksToLocalStorage(tasks);
+  renderTasks();
+  setFocus(task.uuid); // Ensure focus is maintained on the task
 }
 
 function editTaskTime(uuid) {
@@ -1270,3 +1283,4 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
 document.getElementById('preselection-btn').addEventListener('click', function() {
   initiatePreselection();
 });
+
