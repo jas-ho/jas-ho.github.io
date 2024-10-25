@@ -638,6 +638,9 @@ document.addEventListener('keydown', function(e) {
   const taskList = document.getElementById('taskList');
   const taskInput = document.getElementById('taskInput');
 
+  // Check if any modifier key is pressed
+  const isModifierPressed = e.ctrlKey || e.metaKey || e.altKey || e.shiftKey;
+
   // Check if the active element is any input field
   if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
     // Allow normal typing in input fields
@@ -653,25 +656,36 @@ document.addEventListener('keydown', function(e) {
     return;
   }
 
-  if (e.key === 'f') { // Toggle Fullscreen
-    toggleFullscreen();
-    e.preventDefault();
-  } else if (e.key === 'h') { // Hide / Show Completed
-    toggleCompletedTasks();
-    console.log('toggleCompletedTasks');
-    e.preventDefault();
-  } else if (e.key === 'p') { // Initiate Preselection
-    initiatePreselection();
-    console.log('initiatePreselection');
-    e.preventDefault();
-  } else if (e.key === 'n') { // Focus Input Box to add new task
-    focusInputBox();
-    console.log('focusInput');
-    e.preventDefault();
-  } else if (e.key === 'Escape') { // Move Focus to First Task
-    focusFirstTask();
-    e.preventDefault();
-  } else if (document.activeElement === taskList || document.activeElement.closest('#taskList')) {
+  // Only process single-key shortcuts if no modifier is pressed
+  if (!isModifierPressed) {
+    switch (e.key) {
+      case 'f': // Toggle Fullscreen
+        toggleFullscreen();
+        e.preventDefault();
+        break;
+      case 'h': // Hide / Show Completed
+        toggleCompletedTasks();
+        console.log('toggleCompletedTasks');
+        e.preventDefault();
+        break;
+      case 'p': // Initiate Preselection
+        initiatePreselection();
+        console.log('initiatePreselection');
+        e.preventDefault();
+        break;
+      case 'n': // Focus Input Box to add new task
+        focusInputBox();
+        console.log('focusInput');
+        e.preventDefault();
+        break;
+      case 'Escape': // Move Focus to First Task
+        focusFirstTask();
+        e.preventDefault();
+        break;
+    }
+  }
+
+  if (document.activeElement === taskList || document.activeElement.closest('#taskList')) {
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       const visibleTasks = tasks.filter(task => !(task.completed && !showCompletedTasks));
       const currentIndex = visibleTasks.findIndex(task => task.uuid === focusedUUID);
@@ -698,7 +712,8 @@ document.addEventListener('keydown', function(e) {
         editTaskTitle(focusedUUID);
         e.preventDefault();
       }
-    } else {
+    } else if (!isModifierPressed) {
+      // Only process these shortcuts if no modifier is pressed
       switch (e.key) {
         case 'm': // Mark
           if (focusedUUID) {
