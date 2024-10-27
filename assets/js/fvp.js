@@ -778,7 +778,8 @@ document.getElementById('delete-all').addEventListener('click', function() {
 
 document.getElementById('export-btn').addEventListener('click', async function() {
   const timestamp = new Date().toISOString().split('T')[0];
-  const defaultFilename = `${timestamp}_FVP_tasks.json`;
+  const modePrefix = isWorkMode ? 'work' : 'private';
+  const defaultFilename = `${timestamp}_FVP_${modePrefix}_tasks.json`;
   const jsonString = JSON.stringify(tasks, null, 2);
 
   if ('showSaveFilePicker' in window) {
@@ -1367,3 +1368,4 @@ function toggleMode() {
   renderTasks();
   console.log('UI updated for new mode');
 }
+
