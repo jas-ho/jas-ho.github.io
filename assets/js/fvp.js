@@ -27,6 +27,7 @@ function loadTasksFromLocalStorage() {
           }
           if (task.startTime === undefined) task.startTime = null;
           if (task.endTime === undefined) task.endTime = null;
+          if (task.firstStartedTime === undefined) task.firstStartedTime = null; // Add this line
         });
         return tasks;
       }
@@ -171,7 +172,8 @@ function addTask(event) {
       startTime: null,
       endTime: null,
       parentUUID: null,
-      deferred: false // Add deferred property
+      deferred: false,
+      firstStartedTime: null
     };
     tasks.push(newTask);
     input.value = '';
@@ -439,8 +441,12 @@ function startTask(task) {
 
   if (task.lastStartedTime === null) {
     // only start the task if it hasn't been started yet
-    task.lastStartedTime = Date.now();
-    task.startTime = task.lastStartedTime;
+    const now = Date.now();
+    task.lastStartedTime = now;
+    task.startTime = now;
+    if (task.firstStartedTime === null) {
+      task.firstStartedTime = now;
+    }
     console.log('started task', task.uuid);
   } else {
     console.warn('attempting to start a task that has already been started. Task: ', task);
@@ -1298,4 +1304,3 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
 document.getElementById('preselection-btn').addEventListener('click', function() {
   initiatePreselection();
 });
-
