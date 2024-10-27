@@ -469,7 +469,7 @@ title: FVP Task Manager
     <div id="progress-bar"></div>
   </div>
   <div id="time-and-shortcuts">
-    <div id="cumulative-time">Cumulative Work Time: 0:00 | Completed: 0 | Total: 0</div>
+    <div id="cumulative-time">Cumulative Time: 0:00 | Completed: 0 | Total: 0</div>
     <div>
       <a href="/static/fvp/fvp-info.html" class="info-link" title="What is FVP?" target="_blank">What is FVP?</a>
       <span class="separator">|</span>
@@ -496,6 +496,7 @@ title: FVP Task Manager
     </form>
   </div>
   <div id="task-actions">
+    <button id="mode-toggle" class="btn-icon" title="Toggle Work/Private Mode"><i data-feather="layers"></i></button>
     <button id="export-btn" class="btn-icon" title="Export Tasks"><i data-feather="download"></i></button>
     <button id="import-btn" class="btn-icon" title="Import Tasks"><i data-feather="upload"></i></button>
     <button id="delete-all" class="btn-icon" title="Delete All Tasks"><i data-feather="trash-2"></i></button>
@@ -511,4 +512,3 @@ title: FVP Task Manager
 
 <script src="{{ '/assets/js/fvp.js' | relative_url }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-

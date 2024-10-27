@@ -1,12 +1,18 @@
 let tasks = [];
 let focusedUUID = null;
 let isFullscreenMode = false;
+let isWorkMode = false;
+console.log('Initial work mode:', isWorkMode);
 
 function saveTasksToLocalStorage(tasks) {
   try {
+    const key = isWorkMode ? 'workTasks' : 'privateTasks';
+    console.log('Saving tasks to localStorage:', { key, taskCount: tasks.length });
     const serializedTasks = JSON.stringify(tasks);
-    localStorage.setItem('tasks', serializedTasks);
+    localStorage.setItem(key, serializedTasks);
+    console.log('Tasks saved successfully');
   } catch (e) {
+    console.error('Failed to save tasks:', e);
     if (e.name === 'QuotaExceededError') {
       alert('Storage limit exceeded. Please delete some tasks.');
     } else {
@@ -17,21 +23,23 @@ function saveTasksToLocalStorage(tasks) {
 
 function loadTasksFromLocalStorage() {
   try {
-    const serializedTasks = localStorage.getItem('tasks');
+    const key = isWorkMode ? 'workTasks' : 'privateTasks';
+    console.log('Loading tasks from localStorage:', { key });
+    const serializedTasks = localStorage.getItem(key);
     if (serializedTasks) {
-      const tasks = JSON.parse(serializedTasks);
-      if (Array.isArray(tasks)) {
-        tasks.forEach(task => {
-          if (!task.uuid) {
-            task.uuid = generateUUID();
-          }
+      const loadedTasks = JSON.parse(serializedTasks);
+      if (Array.isArray(loadedTasks)) {
+        loadedTasks.forEach(task => {
+          if (!task.uuid) task.uuid = generateUUID();
           if (task.startTime === undefined) task.startTime = null;
           if (task.endTime === undefined) task.endTime = null;
-          if (task.firstStartedTime === undefined) task.firstStartedTime = null; // Add this line
+          if (task.firstStartedTime === undefined) task.firstStartedTime = null;
         });
-        return tasks;
+        console.log('Tasks loaded successfully:', { taskCount: loadedTasks.length });
+        return loadedTasks;
       }
     }
+    console.log('No tasks found in localStorage');
   } catch (e) {
     console.error('Failed to load tasks:', e);
   }
@@ -849,9 +857,19 @@ document.getElementById('clear-completed-btn').addEventListener('click', clearCo
 
 // Load tasks when the page loads
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOMContentLoaded event fired');
+
+  // Set initial container class
+  const container = document.getElementById('fvp-container');
+  if (container) {
+    container.classList.toggle('work-mode', isWorkMode);
+  }
+
+  console.log('Initial mode:', isWorkMode ? 'work' : 'private');
+
   tasks = loadTasksFromLocalStorage();
   renderTasks();
-  startUpdatingTime(); // Start updating the time display
+  startUpdatingTime();
   document.getElementById('taskList').focus();
   feather.replace();
   updateToggleCompletedButton();
@@ -907,13 +925,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const afterIndex = afterUUID ? tasks.findIndex(task => task.uuid === afterUUID) : tasks.length;
     tasks.splice(afterIndex, 0, draggedTask);
   }
+
 });
 
-// Listen for changes to LocalStorage
+// Update the storage event listener to use the correct key
 window.addEventListener('storage', (event) => {
-  if (event.key === 'tasks') {
+  const relevantKey = isWorkMode ? 'workTasks' : 'privateTasks';
+  if (event.key === relevantKey) {
     tasks = loadTasksFromLocalStorage();
     renderTasks();
+  }
+});
+
+// Add a direct event listener outside of DOMContentLoaded
+document.addEventListener('click', function(event) {
+  if (event.target.closest('#mode-toggle')) {
+    console.log('Mode toggle clicked');
+    toggleMode();
   }
 });
 
@@ -949,16 +977,17 @@ function updateProgressBar() {
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(task => task.completed).length;
   const progressBar = document.getElementById('progress-bar');
-  const cumulativeTimeInSeconds = tasks.reduce((total, task) => total + getDisplayedTime(task), 0); // Total time in seconds
+  const cumulativeTimeInSeconds = tasks.reduce((total, task) => total + getDisplayedTime(task), 0);
 
-  // Update progress bar width
-  progressBar.style.width = totalTasks > 0 ? `${(completedTasks / totalTasks) * 100}%` : '0%';
+  // Add mode indicator using UTF symbols
+  const modeSymbol = isWorkMode ? '💼' : '🏠';  // Alternatively: '⚡' : '♥' or '📊' : '🎯'
+  document.getElementById('cumulative-time').textContent =
+    `${modeSymbol} | Cumulative Time: ${formatCumulativeTime(cumulativeTimeInSeconds)} | Completed: ${completedTasks} | Total: ${totalTasks}`;
 
-  // Update cumulative work time display in hh:mm format
-  document.getElementById('cumulative-time').textContent = `Cumulative Work Time: ${formatCumulativeTime(cumulativeTimeInSeconds)} | Completed: ${completedTasks} | Total: ${totalTasks}`;
-
-  // Set hover text for progress bar
-  progressBar.setAttribute('data-hover', `${completedTasks} out of ${totalTasks} tasks completed`);
+  if (progressBar) {
+    progressBar.style.width = totalTasks > 0 ? `${(completedTasks / totalTasks) * 100}%` : '0%';
+    progressBar.setAttribute('data-hover', `${completedTasks} out of ${totalTasks} tasks completed`);
+  }
 }
 
 // Call this function to start updating the time every second
@@ -1304,3 +1333,37 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
 document.getElementById('preselection-btn').addEventListener('click', function() {
   initiatePreselection();
 });
+
+function toggleMode() {
+  console.log('Toggling mode. Current mode:', isWorkMode ? 'work' : 'private');
+
+  // Stop any running tasks before switching modes
+  tasks.forEach(task => {
+    if (task.lastStartedTime !== null) {
+      console.log('Stopping running task:', task);
+      stopTask(task);
+    }
+  });
+
+  // Save current tasks before switching
+  console.log('Saving current tasks before switch:', tasks);
+  saveTasksToLocalStorage(tasks);
+
+  // Toggle mode and update UI
+  isWorkMode = !isWorkMode;
+  console.log('Switched to:', isWorkMode ? 'work' : 'private', 'mode');
+
+  // Update container class directly
+  const container = document.getElementById('fvp-container');
+  if (container) {
+    container.classList.toggle('work-mode', isWorkMode);
+  }
+
+  // Load tasks for new mode
+  tasks = loadTasksFromLocalStorage();
+  console.log('Loaded tasks for new mode:', tasks);
+
+  // Update UI
+  renderTasks();
+  console.log('UI updated for new mode');
+}
