@@ -833,12 +833,15 @@ document.getElementById('import-file').addEventListener('change', function(event
       try {
         const importedTasks = JSON.parse(e.target.result);
         if (Array.isArray(importedTasks)) {
-          // Ensure each imported task has startTime and endTime properties
+          // Ensure each imported task has required properties
           importedTasks.forEach(task => {
             if (task.startTime === undefined) task.startTime = null;
             if (task.endTime === undefined) task.endTime = null;
+            if (!task.uuid) task.uuid = generateUUID(); // Ensure unique UUIDs
           });
-          tasks = importedTasks;
+
+          // Append imported tasks to existing tasks
+          tasks = tasks.concat(importedTasks);
           saveTasksToLocalStorage(tasks);
           renderTasks();
         } else {
@@ -1368,4 +1371,5 @@ function toggleMode() {
   renderTasks();
   console.log('UI updated for new mode');
 }
+
 
