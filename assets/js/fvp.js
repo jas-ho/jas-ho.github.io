@@ -341,7 +341,7 @@ function saveReflection(uuid, reflection) {
   const task = findTaskByUUID(uuid);
   if (task) {
     const timestamp = formatDateTime(Date.now());
-    task.comments = (task.comments || '') + (task.comments ? `\n` : '') + `[${timestamp}] Reflection: ${reflection}`;
+    task.comments = (task.comments || '') + (task.comments ? `\n` : '') + `[${timestamp}] End Reflection: ${reflection}`;
     saveTasksToLocalStorage(tasks);
     renderTasks();
   }
@@ -440,30 +440,144 @@ let isToggling = false;
 
 function startTask(task) {
   console.log('Starting task: ', task);
-  // Stop all other running tasks
-  tasks.forEach(t => {
-    if (t.lastStartedTime !== null && t.uuid !== task.uuid) {
-      stopTask(t);
-    }
-  });
 
-  if (task.lastStartedTime === null) {
-    // only start the task if it hasn't been started yet
-    const now = Date.now();
-    task.lastStartedTime = now;
-    task.startTime = now;
-    if (task.firstStartedTime === null) {
-      task.firstStartedTime = now;
+  // Show reflection dialog before actually starting the task
+  showStartReflectionDialog(task, () => {
+    // Stop all other running tasks
+    tasks.forEach(t => {
+      if (t.lastStartedTime !== null && t.uuid !== task.uuid) {
+        stopTask(t);
+      }
+    });
+
+    if (task.lastStartedTime === null) {
+      const now = Date.now();
+      task.lastStartedTime = now;
+      task.startTime = now;
+      if (task.firstStartedTime === null) {
+        task.firstStartedTime = now;
+      }
+      console.log('started task', task.uuid);
     }
-    console.log('started task', task.uuid);
-  } else {
-    console.warn('attempting to start a task that has already been started. Task: ', task);
+
+    saveTasksToLocalStorage(tasks);
+    renderTasks();
+    console.log('Task started:', task);
+  });
+}
+
+function showStartReflectionDialog(task, onComplete) {
+  showOverlay();
+  const dialog = document.createElement('div');
+  dialog.classList.add('reflection-dialog');
+
+  // Consolidate all dialog styles into a single style block
+  const style = document.createElement('style');
+  style.textContent = `
+    .reflection-dialog {
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .reflection-dialog .existing-comments {
+      margin-bottom: 1em;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 0.5em;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+    }
+
+    .reflection-dialog .input-group {
+      margin-bottom: 1em;
+    }
+
+    .reflection-dialog label {
+      display: block;
+      margin-bottom: 0.5em;
+    }
+
+    .reflection-dialog textarea,
+    .reflection-dialog input {
+      width: 100%;
+      padding: 0.5em;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: var(--main-bg);
+      color: var(--text-color);
+    }
+  `;
+  dialog.appendChild(style);
+
+  // Format existing comments for display
+  const existingComments = task.comments ? task.comments.split('\n').join('<br>') : '';
+
+  dialog.innerHTML = `
+    <h3>Starting: ${task.text}</h3>
+    ${existingComments ? `
+      <div class="existing-comments">
+        <h4>Previous Comments:</h4>
+        <div class="comments-content">${existingComments}</div>
+      </div>
+    ` : ''}
+    <div class="reflection-inputs">
+      <div class="input-group">
+        <label for="definition-of-done">Definition of Done:</label>
+        <textarea id="definition-of-done" rows="2" placeholder="What needs to be true for this task to be complete?"></textarea>
+      </div>
+      <div class="input-group">
+        <label for="expected-duration">Expected Duration (minutes):</label>
+        <input type="number" id="expected-duration" min="1" step="1">
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button id="start-task-btn">Start Task (Enter)</button>
+      <button id="cancel-btn">Cancel (Esc)</button>
+    </div>
+  `;
+
+  setupDialog(dialog);
+  styleDialog(dialog);
+
+  const handleStart = () => {
+    const dod = document.getElementById('definition-of-done').value.trim();
+    const duration = document.getElementById('expected-duration').value;
+
+    if (dod || duration) {
+      const timestamp = formatDateTime(Date.now());
+      const newComment = `[${timestamp}] Start Reflection:\n` +
+        (dod ? `Definition of Done: ${dod}\n` : '') +
+        (duration ? `Expected Duration: ${duration} minutes\n` : '');
+
+      task.comments = (task.comments || '') + (task.comments ? '\n' : '') + newComment;
+    }
+
+    closeDialog(dialog);
+    onComplete();
+  };
+
+  const handleCancel = () => {
+    closeDialog(dialog);
+  };
+
+  function handleKeydown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleStart();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancel();
+    }
   }
 
-  // Save and render after starting the task
-  saveTasksToLocalStorage(tasks);
-  renderTasks();
-  console.log('Task started:', task);
+  dialog.addEventListener('keydown', handleKeydown);
+  document.getElementById('start-task-btn').addEventListener('click', handleStart);
+  document.getElementById('cancel-btn').addEventListener('click', handleCancel);
+
+  // Focus the first input
+  setTimeout(() => {
+    document.getElementById('definition-of-done').focus();
+  }, 0);
 }
 
 function stopTask(task) {
@@ -1256,19 +1370,6 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
 
   setupDialog(dialog);
   styleDialog(dialog);
-
-  // Add styles for the task comparison elements
-  const style = document.createElement('style');
-  style.textContent = `
-    .task-comparison { width: 100%; }
-    .task-item { display: flex; align-items: center; margin-bottom: 15px; width: 100%; }
-    .task-option { display: flex; align-items: center; background: none; border: none; cursor: pointer; padding: 5px; width: 100%; }
-    .task-option i { width: 18px; height: 18px; margin-right: 10px; }
-    .task-text { flex-grow: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .defer-btn { background: none; border: none; cursor: pointer; padding: 5px; }
-    .defer-btn i { width: 18px; height: 18px; }
-  `;
-  dialog.appendChild(style);
 
   // Replace feather icons
   feather.replace({ 'width': 18, 'height': 18 });
