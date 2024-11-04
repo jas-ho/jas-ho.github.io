@@ -624,10 +624,10 @@ function finalizePreselection() {
     Promise.resolve()
       .then(() => {
         // Start the task
-        return new Promise(resolve => {
-          startTask(currentBenchmarkTask);
-          resolve();
-        });
+        // return new Promise(resolve => {
+        //   startTask(currentBenchmarkTask);
+        //   resolve();
+        // });
       })
       .then(() => {
         // Set focus
