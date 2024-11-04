@@ -260,8 +260,20 @@ function promptForReflection(uuid, onComplete) {
 
     const dialog = document.createElement('div');
     dialog.classList.add('reflection-dialog');
+
+    // Format existing comments for display, excluding the "Start Reflection" line
+    const existingComments = task.comments
+      ? task.comments.split('\n').filter(line => !line.includes('Start Reflection')).join('<br>')
+      : '';
+
     dialog.innerHTML = `
-      <p>You worked on "${task.text}" for ${elapsedTime} min. How did it go?</p>
+      ${existingComments ? `
+        <div class="existing-comments">
+          <h4>Previous Comments:</h4>
+          <div class="comments-content">${existingComments}</div>
+        </div>
+      ` : ''}
+      <p style="font-weight: bold; color: #333;">You worked on "${task.text}" for ${elapsedTime} min. How did it go?</p>
       <textarea id="reflection-input" placeholder="Enter your reflection here..." rows="3"></textarea>
       <div class="dialog-actions">
         <button id="complete-task-btn">Complete task now (Enter)</button>
