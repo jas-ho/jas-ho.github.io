@@ -441,29 +441,39 @@ let isToggling = false;
 function startTask(task) {
   console.log('Starting task: ', task);
 
-  // Show reflection dialog before actually starting the task
-  showStartReflectionDialog(task, () => {
-    // Stop all other running tasks
-    tasks.forEach(t => {
-      if (t.lastStartedTime !== null && t.uuid !== task.uuid) {
-        stopTask(t);
-      }
+  // Check if the task has any logged time
+  if (task.cumulativeTimeInSeconds > 0) {
+    // If time is already logged, start the task without showing the reflection dialog
+    proceedToStartTask(task);
+  } else {
+    // Show reflection dialog before actually starting the task
+    showStartReflectionDialog(task, () => {
+      proceedToStartTask(task);
     });
+  }
+}
 
-    if (task.lastStartedTime === null) {
-      const now = Date.now();
-      task.lastStartedTime = now;
-      task.startTime = now;
-      if (task.firstStartedTime === null) {
-        task.firstStartedTime = now;
-      }
-      console.log('started task', task.uuid);
+function proceedToStartTask(task) {
+  // Stop all other running tasks
+  tasks.forEach(t => {
+    if (t.lastStartedTime !== null && t.uuid !== task.uuid) {
+      stopTask(t);
     }
-
-    saveTasksToLocalStorage(tasks);
-    renderTasks();
-    console.log('Task started:', task);
   });
+
+  if (task.lastStartedTime === null) {
+    const now = Date.now();
+    task.lastStartedTime = now;
+    task.startTime = now;
+    if (task.firstStartedTime === null) {
+      task.firstStartedTime = now;
+    }
+    console.log('started task', task.uuid);
+  }
+
+  saveTasksToLocalStorage(tasks);
+  renderTasks();
+  console.log('Task started:', task);
 }
 
 function showStartReflectionDialog(task, onComplete) {
