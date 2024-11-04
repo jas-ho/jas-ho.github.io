@@ -1381,6 +1381,19 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
   setupDialog(dialog);
   styleDialog(dialog);
 
+  // Restore styles for the task comparison elements
+  const style = document.createElement('style');
+  style.textContent = `
+    .task-comparison { width: 100%; }
+    .task-item { display: flex; align-items: center; margin-bottom: 15px; width: 100%; }
+    .task-option { display: flex; align-items: center; background: none; border: none; cursor: pointer; padding: 5px; width: 100%; }
+    .task-option i { width: 18px; height: 18px; margin-right: 10px; }
+    .task-text { flex-grow: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .defer-btn { background: none; border: none; cursor: pointer; padding: 5px; }
+    .defer-btn i { width: 18px; height: 18px; }
+  `;
+  dialog.appendChild(style);
+
   // Replace feather icons
   feather.replace({ 'width': 18, 'height': 18 });
 
