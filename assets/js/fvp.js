@@ -468,6 +468,14 @@ function closeDialog(dialog) {
 }
 
 function deleteTask(uuid) {
+  const task = findTaskByUUID(uuid);
+  if (!task) return;
+
+  // Add confirmation dialog
+  if (!confirm(`Are you sure you want to delete the task: "${task.text}"?`)) {
+    return; // Exit if the user cancels the confirmation
+  }
+
   const index = tasks.findIndex(task => task.uuid === uuid);
   if (index !== -1) {
     tasks.splice(index, 1);
