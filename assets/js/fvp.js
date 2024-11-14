@@ -108,6 +108,33 @@ function clearCompletedTasks() {
   }
 }
 
+function extractTaskDetails(comments) {
+  let definitionOfDone = '';
+  let estimatedDuration = '';
+
+  if (comments) {
+    // Extract "Definition of Done"
+    const dodIndex = comments.lastIndexOf('Definition of Done:');
+    if (dodIndex !== -1) {
+      const dodPart = comments.substring(dodIndex);
+      const dodEndIndex = dodPart.indexOf('Expected Duration');
+      definitionOfDone = dodPart.substring(0, dodEndIndex !== -1 ? dodEndIndex : dodPart.length).trim().replace(/\n/g, '<br>');
+    }
+
+    // Extract "Expected Duration"
+    const durationIndex = comments.lastIndexOf('Expected Duration:');
+    if (durationIndex !== -1) {
+      const durationPart = comments.substring(durationIndex);
+      const durationMatch = durationPart.match(/Expected Duration:\s*(\d+)\s*minutes/);
+      if (durationMatch) {
+        estimatedDuration = `Estimated Duration: ${durationMatch[1]} min`;
+      }
+    }
+  }
+
+  return { definitionOfDone, estimatedDuration };
+}
+
 // Update renderTasks to respect the visibility of completed tasks
 function renderTasks() {
   const taskList = document.getElementById('taskList');
@@ -117,33 +144,12 @@ function renderTasks() {
   tasks.forEach((task) => {
     if (task.completed && !showCompletedTasks) return;
 
+    const { definitionOfDone, estimatedDuration } = extractTaskDetails(task.comments);
+
     const index = tasks.indexOf(task);
     const li = document.createElement('li');
     li.setAttribute('data-task-uuid', task.uuid);
     li.setAttribute('draggable', 'true');
-
-    let definitionOfDone = '';
-    let estimatedDuration = '';
-
-    if (task.lastStartedTime !== null && task.comments) {
-      // Split the comments to find the last "Definition of Done"
-      const dodIndex = task.comments.lastIndexOf('Definition of Done:');
-      if (dodIndex !== -1) {
-        const dodPart = task.comments.substring(dodIndex);
-        const dodEndIndex = dodPart.indexOf('\n\n');
-        definitionOfDone = dodPart.substring(0, dodEndIndex !== -1 ? dodEndIndex : dodPart.length).trim().replace(/\n/g, '<br>');
-      }
-
-      // Split the comments to find the last "Expected Duration"
-      const durationIndex = task.comments.lastIndexOf('Expected Duration:');
-      if (durationIndex !== -1) {
-        const durationPart = task.comments.substring(durationIndex);
-        const durationMatch = durationPart.match(/Expected Duration:\s*(\d+)\s*minutes/);
-        if (durationMatch) {
-          estimatedDuration = `Estimated Duration: ${durationMatch[1]} min`;
-        }
-      }
-    }
 
     li.innerHTML = `
     <div class="task-container">
@@ -1215,6 +1221,9 @@ function editTaskTitle(uuid) {
 
   const taskItem = document.querySelector(`li[data-task-uuid="${uuid}"]`);
   const taskText = taskItem.querySelector('.task-text');
+  const comments = task.comments || '';
+
+  const { definitionOfDone } = extractTaskDetails(comments);
 
   // Replace the task text with an input for editing
   const input = document.createElement('input');
