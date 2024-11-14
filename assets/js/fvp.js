@@ -4,6 +4,8 @@ let isFullscreenMode = false;
 let isWorkMode = false;
 console.log('Initial work mode:', isWorkMode);
 
+let isDialogActive = false; // Flag to track dialog activity
+
 function saveTasksToLocalStorage(tasks) {
   try {
     const key = isWorkMode ? 'workTasks' : 'privateTasks';
@@ -120,9 +122,20 @@ function renderTasks() {
     li.setAttribute('data-task-uuid', task.uuid); // Use UUID
     li.setAttribute('draggable', 'true'); // Make the task draggable
 
+    // Extract the most recent "Definition of Done" from comments
+    let definitionOfDone = '';
+    if (task.comments && task.lastStartedTime !== null) {
+      const dodMatch = task.comments.match(/Definition of Done:\s*([\s\S]+?)(?=\n\n|$)/);
+      if (dodMatch) {
+        definitionOfDone = dodMatch[1].trim().replace(/\n/g, '<br>');
+      }
+    }
+
     li.innerHTML = `
-    <span class="drag-handle" title="Drag to reorder">☰</span> <!-- Add drag handle -->
-    <span class="task-text" ondblclick="editTaskTitle('${task.uuid}')">${task.text}</span>
+    <div class="task-container">
+      <span class="task-text" ondblclick="editTaskTitle('${task.uuid}')">${task.text}</span>
+      ${definitionOfDone ? `<div class="definition-of-done">${definitionOfDone}</div>` : ''}
+    </div>
     <span class="stopwatch" ondblclick="editTaskTime('${task.uuid}')">${formatTime(getDisplayedTime(task))}</span>
     <div class="controls">
       <button class="start-btn" onclick="handleStartButtonClick(event, '${task.uuid}')" title="${task.lastStartedTime !== null ? 'Pause' : 'Start'}">
@@ -492,6 +505,7 @@ function showStartReflectionDialog(task, onComplete) {
   showOverlay();
   const dialog = document.createElement('div');
   dialog.classList.add('reflection-dialog');
+  isDialogActive = true; // Set flag to true when dialog is shown
 
   // Consolidate all dialog styles into a single style block
   const style = document.createElement('style');
@@ -576,10 +590,12 @@ function showStartReflectionDialog(task, onComplete) {
 
     closeDialog(dialog);
     onComplete();
+    isDialogActive = false; // Reset flag when dialog is closed
   };
 
   const handleCancel = () => {
     closeDialog(dialog);
+    isDialogActive = false; // Reset flag when dialog is closed
   };
 
   function handleKeydown(e) {
@@ -787,6 +803,8 @@ function logInteraction(action, uuid) {
 }
 
 document.addEventListener('keydown', function(e) {
+  if (isDialogActive) return; // Skip processing if dialog is active
+
   const taskList = document.getElementById('taskList');
   const taskInput = document.getElementById('taskInput');
 
@@ -1447,12 +1465,16 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
     if (!document.body.contains(dialog)) return;
 
     if (e.key === '1') {
+      e.preventDefault();
       handleChooseBenchmark();
     } else if (e.key === '2') {
+      e.preventDefault();
       handleChooseNext();
     } else if (e.key === '0') {
+      e.preventDefault();
       handleDeferNext();
     } else if (e.key === 'Escape') {
+      e.preventDefault();
       handleChooseCancel();
     }
   }

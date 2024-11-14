@@ -24,7 +24,10 @@ title: FVP Task Manager
     transform: translateX(4px);
     transition: transform 0.2s ease-in-out;
   }
-  .task-text { flex-grow: 1; }
+  .task-text {
+    display: block; /* Ensure the task title is a block element */
+    margin-bottom: 3px; /* Add some space below the task title */
+  }
   .controls { display: flex; gap: 10px; }
   #task-controls {
     display: flex;
@@ -497,6 +500,49 @@ title: FVP Task Manager
 
   #taskInput:focus {
     border: 2px solid blue; /* or any other style to indicate focus */
+  }
+
+  .task-container {
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+  }
+
+  .task-text {
+    font-weight: regular;
+    margin-bottom: 5px; /* Space between title and definition */
+  }
+
+  .definition-of-done {
+    font-size: 0.9em; /* Slightly smaller font size */
+    color: #666; /* Lighter color for distinction */
+    white-space: pre-line; /* Preserve line breaks */
+    margin-top: 5px; /* Space above the definition */
+    font-style: italic;
+  }
+
+  li {
+    display: flex;
+    justify-content: space-between; /* Space between title and controls */
+    align-items: flex-start; /* Align items at the top */
+    padding: 10px; /* Add padding for better spacing */
+  }
+
+  .task-container {
+    flex-grow: 1; /* Allow the task container to take up available space */
+  }
+
+  .stopwatch {
+    margin-right: 10px; /* Space between stopwatch and controls */
+    align-items: flex-start; /* Align stopwatch at the top */
+  }
+  .controls {
+    align-items: flex-start; /* Align controls at the top */
+  }
+
+  li.running {
+    background-color: #e0f7e0; /* Pale green background */
+    border-radius: 5px; /* Rounded corners for a nicer look */
+    padding: 10px; /* Ensure padding is consistent */
   }
 
 </style>
