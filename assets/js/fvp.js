@@ -775,8 +775,10 @@ function focusFirstTask() {
 }
 
 function focusInputBox() {
+  const taskInput = document.getElementById('taskInput');
   focusedUUID = null;
   updateFocus();
+  taskInput.focus();
 }
 
 function logInteraction(action, uuid) {
@@ -792,7 +794,7 @@ document.addEventListener('keydown', function(e) {
   const isModifierPressed = e.ctrlKey || e.metaKey || e.altKey || e.shiftKey;
 
   // Check if the active element is any input field
-  if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+  if (document.activeElement === taskInput) {
     // Allow normal typing in input fields
     if (e.key === 'Escape') {
       focusFirstTask();
@@ -803,7 +805,7 @@ document.addEventListener('keydown', function(e) {
       logInteraction('navigate', focusedUUID); // Log the action
       e.preventDefault();
     }
-    return;
+    return; // Exit early if the input box is focused
   }
 
   // Only process single-key shortcuts if no modifier is pressed
@@ -1507,5 +1509,8 @@ function toggleMode() {
   renderTasks();
   console.log('UI updated for new mode');
 }
+
+// Add event listener to the input box to ensure focus
+document.getElementById('taskInput').addEventListener('focus', focusInputBox);
 
 
