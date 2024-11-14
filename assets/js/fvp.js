@@ -112,29 +112,44 @@ function clearCompletedTasks() {
 function renderTasks() {
   const taskList = document.getElementById('taskList');
   taskList.innerHTML = '';
-  let lastMarkedTask = getCurrentBenchmarkTask(); // Use the new function
+  let lastMarkedTask = getCurrentBenchmarkTask();
 
   tasks.forEach((task) => {
-    if (task.completed && !showCompletedTasks) return; // Skip completed tasks if hidden
+    if (task.completed && !showCompletedTasks) return;
 
     const index = tasks.indexOf(task);
     const li = document.createElement('li');
-    li.setAttribute('data-task-uuid', task.uuid); // Use UUID
-    li.setAttribute('draggable', 'true'); // Make the task draggable
+    li.setAttribute('data-task-uuid', task.uuid);
+    li.setAttribute('draggable', 'true');
 
-    // Extract the most recent "Definition of Done" from comments
     let definitionOfDone = '';
-    if (task.comments && task.lastStartedTime !== null) {
-      const dodMatch = task.comments.match(/Definition of Done:\s*([\s\S]+?)(?=\n\n|$)/);
-      if (dodMatch) {
-        definitionOfDone = dodMatch[1].trim().replace(/\n/g, '<br>');
+    let estimatedDuration = '';
+
+    if (task.lastStartedTime !== null && task.comments) {
+      // Split the comments to find the last "Definition of Done"
+      const dodIndex = task.comments.lastIndexOf('Definition of Done:');
+      if (dodIndex !== -1) {
+        const dodPart = task.comments.substring(dodIndex);
+        const dodEndIndex = dodPart.indexOf('\n\n');
+        definitionOfDone = dodPart.substring(0, dodEndIndex !== -1 ? dodEndIndex : dodPart.length).trim().replace(/\n/g, '<br>');
+      }
+
+      // Split the comments to find the last "Expected Duration"
+      const durationIndex = task.comments.lastIndexOf('Expected Duration:');
+      if (durationIndex !== -1) {
+        const durationPart = task.comments.substring(durationIndex);
+        const durationMatch = durationPart.match(/Expected Duration:\s*(\d+)\s*minutes/);
+        if (durationMatch) {
+          estimatedDuration = `Estimated Duration: ${durationMatch[1]} min`;
+        }
       }
     }
 
     li.innerHTML = `
     <div class="task-container">
       <span class="task-text" ondblclick="editTaskTitle('${task.uuid}')">${task.text}</span>
-      ${definitionOfDone ? `<div class="definition-of-done">${definitionOfDone}</div>` : ''}
+      ${task.lastStartedTime !== null && definitionOfDone ? `<div class="definition-of-done">${definitionOfDone}</div>` : ''}
+      ${task.lastStartedTime !== null && estimatedDuration ? `<div class="estimated-duration">${estimatedDuration}</div>` : ''}
     </div>
     <span class="stopwatch" ondblclick="editTaskTime('${task.uuid}')">${formatTime(getDisplayedTime(task))}</span>
     <div class="controls">
