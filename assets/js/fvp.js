@@ -277,6 +277,7 @@ function reopenTask(uuid) {
 
 function promptForReflection(uuid, onComplete) {
   showOverlay();
+  isDialogActive = true; // Set flag when dialog opens
   const task = findTaskByUUID(uuid);
   if (task) {
     // Stop the task to ensure cumulative time is up-to-date and restart immediately to account for reflection time
@@ -335,6 +336,7 @@ function promptForReflection(uuid, onComplete) {
       saveReflection(uuid, input.value);
       closeDialog(dialog);
       onComplete();
+      isDialogActive = false; // Reset flag when dialog closes
       initiatePreselection();
     }
 
@@ -343,6 +345,7 @@ function promptForReflection(uuid, onComplete) {
       shelveTask(uuid);
       closeDialog(dialog);
       onComplete();
+      isDialogActive = false; // Reset flag when dialog closes
       initiatePreselection();
     }
 
@@ -351,6 +354,7 @@ function promptForReflection(uuid, onComplete) {
       saveTasksToLocalStorage(tasks);
       renderTasks();
       closeDialog(dialog);
+      isDialogActive = false; // Reset flag when dialog closes
     }
 
     document.getElementById('complete-task-btn').addEventListener('click', handleComplete);
@@ -532,9 +536,9 @@ function proceedToStartTask(task) {
 
 function showStartReflectionDialog(task, onComplete) {
   showOverlay();
+  isDialogActive = true; // Set flag when dialog opens
   const dialog = document.createElement('div');
   dialog.classList.add('reflection-dialog');
-  isDialogActive = true; // Set flag to true when dialog is shown
 
   // Consolidate all dialog styles into a single style block
   const style = document.createElement('style');
@@ -619,12 +623,12 @@ function showStartReflectionDialog(task, onComplete) {
 
     closeDialog(dialog);
     onComplete();
-    isDialogActive = false; // Reset flag when dialog is closed
+    isDialogActive = false; // Reset flag when dialog closes
   };
 
   const handleCancel = () => {
     closeDialog(dialog);
-    isDialogActive = false; // Reset flag when dialog is closed
+    isDialogActive = false; // Reset flag when dialog closes
   };
 
   function handleKeydown(e) {
@@ -833,6 +837,11 @@ function logInteraction(action, uuid) {
 
 document.addEventListener('keydown', function(e) {
   if (isDialogActive) return; // Skip processing if dialog is active
+
+  // Add check for editing inputs
+  const isEditing = document.activeElement.classList.contains('edit-task-input') ||
+                   document.activeElement.matches('input[type="text"]');
+  if (isEditing) return; // Skip processing if user is editing
 
   const taskList = document.getElementById('taskList');
   const taskInput = document.getElementById('taskInput');
@@ -1411,6 +1420,7 @@ function initiatePreselection(lastConsideredTask = null) {
 // Function to compare two tasks and update marked status if necessary
 function compareTasks(benchmarkTask, nextConsideredTask) {
   showOverlay();
+  isDialogActive = true; // Set flag when dialog opens
   const dialog = document.createElement('div');
   dialog.classList.add('comparison-dialog');
 
@@ -1464,6 +1474,7 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
   function handleChooseBenchmark() {
     closeDialog(dialog);
     hideOverlay();
+    isDialogActive = false; // Reset flag when dialog closes
     initiatePreselection(nextConsideredTask);
   }
 
@@ -1473,6 +1484,7 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
     }
     closeDialog(dialog);
     hideOverlay();
+    isDialogActive = false; // Reset flag when dialog closes
     initiatePreselection(nextConsideredTask);
   }
 
@@ -1489,6 +1501,7 @@ function compareTasks(benchmarkTask, nextConsideredTask) {
   function handleChooseCancel() {
     closeDialog(dialog);
     hideOverlay();
+    isDialogActive = false; // Reset flag when dialog closes
     finalizePreselection();
   }
 
